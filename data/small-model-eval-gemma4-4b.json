@@ -1,0 +1,207 @@
+{
+  "model": "gemma-4-E4B-it-UD-Q4_K_XL",
+  "baseUrl": "http://127.0.0.1:8077",
+  "tag": "gemma4-4b",
+  "report": [
+    {
+      "id": "route",
+      "bare": {
+        "failHits": [],
+        "passCount": 2,
+        "finishReason": "stop"
+      },
+      "grounded": {
+        "failHits": [],
+        "passCount": 2,
+        "citations": {
+          "cited": 0,
+          "resolvable": 0
+        },
+        "finishReason": "stop"
+      },
+      "evidence": [
+        "Routes & Controllers",
+        "custom_route_loader.rst",
+        "routing.rst"
+      ],
+      "evidenceHits": 3,
+      "bareAnswerHead": "As a senior Drupal developer, I recommend using the standard routing and controller pattern. You will need three files: the routing definition, the controller class, and (best practice) the service definition. Assume your custom module is named `my_module`. ",
+      "groundedAnswerHead": "**In `my_module.routing.yml`:** ```yaml my_module.hello: path: '/hello' defaults: _controller: '\\Drupal\\my_module\\Controller\\HelloController::hello' _title: 'Hello Page' requirements: _permission: 'access content' ``` This defines the route for the path "
+    },
+    {
+      "id": "message",
+      "bare": {
+        "failHits": [],
+        "passCount": 1,
+        "finishReason": "stop"
+      },
+      "grounded": {
+        "failHits": [],
+        "passCount": 1,
+        "citations": {
+          "cited": 0,
+          "resolvable": 0
+        },
+        "finishReason": "stop"
+      },
+      "evidence": [
+        "Messenger.php",
+        "JobController.php",
+        "RegisterForm.php"
+      ],
+      "evidenceHits": 3,
+      "bareAnswerHead": "To show a status message in Drupal 10, you must inject the `MessengerInterface` service and use its `addMessage()` method. This is typically done within a controller or a form submission handler. ### Example: Using a Controller ```php <?php namespace Drupa",
+      "groundedAnswerHead": "```php $this->messenger()->addStatus($this->t('Your status message here.')); ``` This method is used to add a status message to the user (uri). For example, in a controller: ```php $this->messenger() ->addStatus($this->t('Cron job @job_label (@module) was su"
+    },
+    {
+      "id": "dbquery",
+      "bare": {
+        "failHits": [],
+        "passCount": 1,
+        "finishReason": "stop"
+      },
+      "grounded": {
+        "failHits": [],
+        "passCount": 1,
+        "citations": {
+          "cited": 0,
+          "resolvable": 0
+        },
+        "finishReason": "stop"
+      },
+      "evidence": [
+        "Database abstraction layer | Drupal API",
+        "Structure of a service file",
+        "database.api.php"
+      ],
+      "evidenceHits": 3,
+      "bareAnswerHead": "The correct and secure way to run a `SELECT` query in Drupal 10 is by utilizing the **Database API** via dependency injection. This approach ensures that your code is database-agnostic and handles connection pooling correctly. Here is the code, assuming you a",
+      "groundedAnswerHead": "To run a `SELECT` query, you should use dependency injection to inject the 'database' service into your class (uri, uri). You should then use the dynamic query API to build the query (uri, uri). **Code Example:** ```php use Drupal\\Core\\Database\\Connection; "
+    },
+    {
+      "id": "currentuser",
+      "bare": {
+        "failHits": [],
+        "passCount": 1,
+        "finishReason": "stop"
+      },
+      "grounded": {
+        "failHits": [],
+        "passCount": 1,
+        "citations": {
+          "cited": 2,
+          "resolvable": 2
+        },
+        "finishReason": "stop"
+      },
+      "evidence": [
+        "masquerade.module",
+        "Services & Dependency Injection",
+        "UserRequestSubscriber.php"
+      ],
+      "evidenceHits": 3,
+      "bareAnswerHead": "The most direct way to retrieve the currently logged-in user account in Drupal 10 is by using the `\\Drupal::currentUser()` service. This method returns an object implementing the `\\Drupal\\Core\\Session\\AccountInterface`, which provides methods to check authent",
+      "groundedAnswerHead": "You can get the currently logged-in user account using the static `\\Drupal::currentUser()` method (drupal://document/doc_1tChASFkHHwegNB1rMJKktOC), or by injecting the `current_user` service into your class (drupal://document/doc_zy6FQgQC_ANyvTSam0ShAZH9). **"
+    },
+    {
+      "id": "sdc",
+      "bare": {
+        "failHits": [],
+        "passCount": 0,
+        "finishReason": "stop"
+      },
+      "grounded": {
+        "failHits": [],
+        "passCount": 1,
+        "citations": {
+          "cited": 2,
+          "resolvable": 2
+        },
+        "finishReason": "stop"
+      },
+      "evidence": [
+        "SDC stylesheets are now added in the \"theme\" aggregate group (as opposed to \"default\" group) to correct CSS source order for components",
+        "Using Single-Directory Components",
+        "Drupal Canvas SDC Components (Twig)"
+      ],
+      "evidenceHits": 3,
+      "bareAnswerHead": "The recommended system is the **Libraries API** (part of the Asset Library system). You achieve this by creating a custom module that contains the component's logic and assets: 1. **Template:** The component's HTML is defined in a Twig template (e.g., `comp",
+      "groundedAnswerHead": "The recommended system is Single-Directory Components (SDC) (drupal://document/doc_g3qesdGboDq9SOlMKWvH3VRc). This system is designed to make it easy to find and work with all of the assets that make up an element on the page (drupal://document/doc_g3qesdGboD"
+    },
+    {
+      "id": "recipes",
+      "bare": {
+        "failHits": [],
+        "passCount": 0,
+        "finishReason": "stop"
+      },
+      "grounded": {
+        "failHits": [],
+        "passCount": 1,
+        "citations": {
+          "cited": 0,
+          "resolvable": 0
+        },
+        "finishReason": "stop"
+      },
+      "evidence": [
+        "RecipeRunner.php",
+        "recipe:apply¶",
+        "ConfigConfigurator.php"
+      ],
+      "evidenceHits": 3,
+      "bareAnswerHead": "The system is **Configuration Management** (CMI), supplemented by **Content Export/Import**. ### Explanation 1. **Configuration Management (CMI):** * This system handles the structural elements of your site (e.g., view definitions, field storage, cont",
+      "groundedAnswerHead": "The system is the Recipe system. A module or distribution can ship default configuration and content by using the Recipe system, which handles the processing of installation, configuration, and content within a recipe structure (RecipeRunner.php [1]). This pr"
+    },
+    {
+      "id": "ckeditor",
+      "bare": {
+        "failHits": [],
+        "passCount": 1,
+        "finishReason": "stop"
+      },
+      "grounded": {
+        "failHits": [],
+        "passCount": 0,
+        "citations": {
+          "cited": 0,
+          "resolvable": 0
+        },
+        "finishReason": "stop"
+      },
+      "evidence": [
+        "SmartDefaultSettings.php",
+        "CKEditor5.php",
+        "ckeditor5.module"
+      ],
+      "evidenceHits": 3,
+      "bareAnswerHead": "The default text editor in Drupal 10 is **CKEditor 5**. It replaced **CKEditor 4**, which was the primary editor shipped with Drupal 9.",
+      "groundedAnswerHead": "The evidence is insufficient."
+    },
+    {
+      "id": "phpfloor",
+      "bare": {
+        "failHits": [],
+        "passCount": 0,
+        "finishReason": "stop"
+      },
+      "grounded": {
+        "failHits": [],
+        "passCount": 0,
+        "citations": {
+          "cited": 0,
+          "resolvable": 0
+        },
+        "finishReason": "stop"
+      },
+      "evidence": [
+        "composer.json",
+        ".ddev/config.yaml Reference",
+        "composer.json"
+      ],
+      "evidenceHits": 3,
+      "bareAnswerHead": "PHP 8.2 or higher.",
+      "groundedAnswerHead": "The evidence is insufficient."
+    }
+  ]
+}
