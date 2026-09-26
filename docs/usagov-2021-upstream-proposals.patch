@@ -83,22 +83,25 @@ index d64dd4f..26b065d 100644
  field_name: moderation_state
  entity_type: node
 diff --git a/web/modules/custom/usagov_benefit_category_search/src/EventSubscriber/DatalayerAlterSubscriber.php b/web/modules/custom/usagov_benefit_category_search/src/EventSubscriber/DatalayerAlterSubscriber.php
-index 8c7555f..421b6d3 100644
+index 8c7555f..d3f917b 100644
 --- a/web/modules/custom/usagov_benefit_category_search/src/EventSubscriber/DatalayerAlterSubscriber.php
 +++ b/web/modules/custom/usagov_benefit_category_search/src/EventSubscriber/DatalayerAlterSubscriber.php
-@@ -16,6 +16,11 @@ class DatalayerAlterSubscriber implements EventSubscriberInterface {
+@@ -16,6 +16,14 @@ class DatalayerAlterSubscriber implements EventSubscriberInterface {
     * {@inheritDoc}
     */
    public static function getSubscribedEvents() {
-+    // Local-test patch: event class lives in usa_twig_vars, which is not yet
-+    // loadable during install-time container rebuilds.
++    // The event class lives in usa_twig_vars, which is not necessarily
++    // loadable during install-time container rebuilds (ModuleInstaller
++    // rebuilds the kernel after each module enable, and no cross-module
++    // dependency forces the enable order). Return nothing until it is
++    // loadable; the subscriptions register on the next rebuild.
 +    if (!class_exists(DatalayerAlterEvent::class)) {
 +      return [];
 +    }
      return [
        DatalayerAlterEvent::EVENT_NAME => 'onDatalayerAlter',
      ];
-@@ -36,7 +41,10 @@ public function onDatalayerAlter(DatalayerAlterEvent $event): void {
+@@ -36,7 +44,10 @@ public function onDatalayerAlter(DatalayerAlterEvent $event): void {
      $event->datalayer['hasBenefitCategory'] = FALSE;
  
      if ($node instanceof Node && $node->getType() === 'basic_page') {
