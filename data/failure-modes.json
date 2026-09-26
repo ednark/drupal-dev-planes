@@ -1,0 +1,62 @@
+{
+  "version": "0.1.0",
+  "note": "Seed catalog. Every row is a claimed failure mode with a detection recipe; none has been swept against a live site yet. A row graduates to evidenceStatus 'measured' only after a sweep reproduces it on a live install, verifies the detection recipe catches it, and records the result. SKIPPED and INCONCLUSIVE sweeps are never folded into pass rates.",
+  "failureModes": [
+    {
+      "id": "config-import-without-rebuild",
+      "plane": "verification",
+      "title": "config:import exits 0 but the site serves the old config",
+      "symptom": "drush config:import or config:set reports success; a page or form still behaves per the previous configuration.",
+      "rootCause": "Config consumers cache parsed values outside the config factory, or the import did not invalidate the cache tags the affected output depends on.",
+      "detection": "After any config write, read back with get_site_config (state), then probe an affected URL with verify_page. A match on config:get alone is not evidence of delivery.",
+      "evidenceStatus": "claimed",
+      "citation": "mosaic-headless 'never trust the commit' pattern, adapted"
+    },
+    {
+      "id": "hook-update-noop",
+      "plane": "verification",
+      "title": "hook_update_N returns early and reports success",
+      "symptom": "The update hook shows as applied; the intended data change did not happen.",
+      "rootCause": "Early-return paths (dependency guards, conditional skips) return without doing work; drush updb reports success either way.",
+      "detection": "After updb, assert the intended data state via state-plane reads (entity counts, field values), never via the update log.",
+      "evidenceStatus": "claimed"
+    },
+    {
+      "id": "plugin-never-discovered",
+      "plane": "state",
+      "title": "Custom plugin class parses cleanly but is never discovered",
+      "symptom": "No error anywhere; the plugin's behavior is simply absent.",
+      "rootCause": "Wrong namespace/file location relative to the module's src/ tree, or missing/incorrect Drupal attribute — discovery is convention-driven, not loader-driven.",
+      "detection": "Consult the knowledge plane (discovery docs) before writing; probe the discovered plugin list via the state plane after. Both, not either.",
+      "evidenceStatus": "claimed"
+    },
+    {
+      "id": "di-runtime-fatal",
+      "plane": "verification",
+      "title": "Wrong service/interface injection fatals only on the page that uses it",
+      "symptom": "Site builds and most pages work; one route returns the critical-error screen.",
+      "rootCause": "Autowiring and interface mismatches resolve only at first instantiation on the affected route.",
+      "detection": "verify_page every route the change touches; a 5xx or the critical-error marker is a dead page even when the commit reported success.",
+      "evidenceStatus": "claimed"
+    },
+    {
+      "id": "missing-cache-tag",
+      "plane": "verification",
+      "title": "Right content, wrong freshness, no error ever",
+      "symptom": "Updated content does not appear on lists or views that cache by tag.",
+      "rootCause": "The render array lacks the entity's cache tag (or a required cache context), so invalidation never reaches it.",
+      "detection": "After content writes, verify_page the listing URL and compare a marker string; absence with correct backend state implicates cache metadata.",
+      "evidenceStatus": "claimed"
+    },
+    {
+      "id": "critical-error-page",
+      "plane": "verification",
+      "title": "The page is dead but the HTTP status does not say so",
+      "symptom": "Public page returns a very small body or an error screen under a 200/3xx, or a 5xx with a large HTML wrapper.",
+      "rootCause": "Drupal's critical-error handling and proxy layers can produce non-5xx responses for dead pages.",
+      "detection": "verify_page treats 5xx as dead, matches the critical-error marker, and flags 200s under 64 bytes as suspicious_short.",
+      "evidenceStatus": "claimed",
+      "citation": "mosaic-headless: 'WordPress's critical error screen is 2,697 bytes and larger than any naive healthy-page floor'"
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "name": "drupal-agent-planes",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "A unified three-plane MCP interface for Drupal development agents: versioned knowledge, live site state, and verified writes.",
+  "engines": {
+    "node": ">=20"
+  },
+  "workspaces": [
+    "packages/knowledge",
+    "packages/state",
+    "packages/verify",
+    "packages/server"
+  ],
+  "scripts": {
+    "build": "npm run build -w @drupal-agent-planes/knowledge -w @drupal-agent-planes/state -w @drupal-agent-planes/verify -w @drupal-agent-planes/server",
+    "typecheck": "tsc -p tsconfig.typecheck.json",
+    "test": "tsx --test tests/*.test.ts",
+    "smoke": "node scripts/smoke.mjs",
+    "mcp:start": "node packages/server/dist/index.js",
+    "mcp:dev": "tsx packages/server/src/index.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "tsx": "^4.15.0",
+    "typescript": "^5.5.4"
+  }
+}
