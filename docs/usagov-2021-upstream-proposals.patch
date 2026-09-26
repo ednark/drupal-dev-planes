@@ -1,0 +1,249 @@
+diff --git a/config/sync/core.base_field_override.node.basic_page.moderation_state.yml b/config/sync/core.base_field_override.node.basic_page.moderation_state.yml
+index 3527848..ca87ac0 100644
+--- a/config/sync/core.base_field_override.node.basic_page.moderation_state.yml
++++ b/config/sync/core.base_field_override.node.basic_page.moderation_state.yml
+@@ -4,6 +4,7 @@ status: true
+ dependencies:
+   config:
+     - node.type.basic_page
++    - workflows.workflow.basic_workflow
+ id: node.basic_page.moderation_state
+ field_name: moderation_state
+ entity_type: node
+diff --git a/config/sync/core.base_field_override.node.bears_agency.moderation_state.yml b/config/sync/core.base_field_override.node.bears_agency.moderation_state.yml
+index d25ffb9..7ae3e9e 100644
+--- a/config/sync/core.base_field_override.node.bears_agency.moderation_state.yml
++++ b/config/sync/core.base_field_override.node.bears_agency.moderation_state.yml
+@@ -4,6 +4,7 @@ status: true
+ dependencies:
+   config:
+     - node.type.bears_agency
++    - workflows.workflow.basic_workflow
+ id: node.bears_agency.moderation_state
+ field_name: moderation_state
+ entity_type: node
+diff --git a/config/sync/core.base_field_override.node.bears_benefit.moderation_state.yml b/config/sync/core.base_field_override.node.bears_benefit.moderation_state.yml
+index 2882fd9..28d460d 100644
+--- a/config/sync/core.base_field_override.node.bears_benefit.moderation_state.yml
++++ b/config/sync/core.base_field_override.node.bears_benefit.moderation_state.yml
+@@ -4,6 +4,7 @@ status: true
+ dependencies:
+   config:
+     - node.type.bears_benefit
++    - workflows.workflow.basic_workflow
+ id: node.bears_benefit.moderation_state
+ field_name: moderation_state
+ entity_type: node
+diff --git a/config/sync/core.base_field_override.node.bears_criteria.moderation_state.yml b/config/sync/core.base_field_override.node.bears_criteria.moderation_state.yml
+index 0f57765..1b968b8 100644
+--- a/config/sync/core.base_field_override.node.bears_criteria.moderation_state.yml
++++ b/config/sync/core.base_field_override.node.bears_criteria.moderation_state.yml
+@@ -4,6 +4,7 @@ status: true
+ dependencies:
+   config:
+     - node.type.bears_criteria
++    - workflows.workflow.basic_workflow
+ id: node.bears_criteria.moderation_state
+ field_name: moderation_state
+ entity_type: node
+diff --git a/config/sync/core.base_field_override.node.bears_life_event.moderation_state.yml b/config/sync/core.base_field_override.node.bears_life_event.moderation_state.yml
+index 64a46c2..eea9255 100644
+--- a/config/sync/core.base_field_override.node.bears_life_event.moderation_state.yml
++++ b/config/sync/core.base_field_override.node.bears_life_event.moderation_state.yml
+@@ -4,6 +4,7 @@ status: true
+ dependencies:
+   config:
+     - node.type.bears_life_event
++    - workflows.workflow.basic_workflow
+ id: node.bears_life_event.moderation_state
+ field_name: moderation_state
+ entity_type: node
+diff --git a/config/sync/core.base_field_override.node.bears_life_event_form.moderation_state.yml b/config/sync/core.base_field_override.node.bears_life_event_form.moderation_state.yml
+index 75fa962..b614218 100644
+--- a/config/sync/core.base_field_override.node.bears_life_event_form.moderation_state.yml
++++ b/config/sync/core.base_field_override.node.bears_life_event_form.moderation_state.yml
+@@ -4,6 +4,7 @@ status: true
+ dependencies:
+   config:
+     - node.type.bears_life_event_form
++    - workflows.workflow.basic_workflow
+ id: node.bears_life_event_form.moderation_state
+ field_name: moderation_state
+ entity_type: node
+diff --git a/config/sync/core.base_field_override.node.blog_post.moderation_state.yml b/config/sync/core.base_field_override.node.blog_post.moderation_state.yml
+index d64dd4f..26b065d 100644
+--- a/config/sync/core.base_field_override.node.blog_post.moderation_state.yml
++++ b/config/sync/core.base_field_override.node.blog_post.moderation_state.yml
+@@ -4,6 +4,7 @@ status: true
+ dependencies:
+   config:
+     - node.type.blog_post
++    - workflows.workflow.basic_workflow
+ id: node.blog_post.moderation_state
+ field_name: moderation_state
+ entity_type: node
+diff --git a/web/modules/custom/usagov_benefit_category_search/src/EventSubscriber/DatalayerAlterSubscriber.php b/web/modules/custom/usagov_benefit_category_search/src/EventSubscriber/DatalayerAlterSubscriber.php
+index 8c7555f..421b6d3 100644
+--- a/web/modules/custom/usagov_benefit_category_search/src/EventSubscriber/DatalayerAlterSubscriber.php
++++ b/web/modules/custom/usagov_benefit_category_search/src/EventSubscriber/DatalayerAlterSubscriber.php
+@@ -16,6 +16,11 @@ class DatalayerAlterSubscriber implements EventSubscriberInterface {
+    * {@inheritDoc}
+    */
+   public static function getSubscribedEvents() {
++    // Local-test patch: event class lives in usa_twig_vars, which is not yet
++    // loadable during install-time container rebuilds.
++    if (!class_exists(DatalayerAlterEvent::class)) {
++      return [];
++    }
+     return [
+       DatalayerAlterEvent::EVENT_NAME => 'onDatalayerAlter',
+     ];
+@@ -36,7 +41,10 @@ public function onDatalayerAlter(DatalayerAlterEvent $event): void {
+     $event->datalayer['hasBenefitCategory'] = FALSE;
+ 
+     if ($node instanceof Node && $node->getType() === 'basic_page') {
+-      $pageType = $node->field_page_type->referencedEntities()[0]->getName();
++      // Local-test patch: field_page_type can be empty on a freshly built
++      // basic_page; referencedEntities()[0] was then null and getName() fataled
++      // every page render (sweep row: unpopulated-field fatal).
++      $pageType = $node->field_page_type->referencedEntities()[0]?->getName() ?? '';
+       if ($pageType === 'Standard Page') {
+         // Provide list of categories for this page to GTM via taxonomy-data.
+         if ($terms = $node->field_benefits_category->referencedEntities()) {
+diff --git a/web/modules/custom/usagov_benefit_category_search/src/EventSubscriber/PathSubscriber.php b/web/modules/custom/usagov_benefit_category_search/src/EventSubscriber/PathSubscriber.php
+index d19b813..83ba377 100644
+--- a/web/modules/custom/usagov_benefit_category_search/src/EventSubscriber/PathSubscriber.php
++++ b/web/modules/custom/usagov_benefit_category_search/src/EventSubscriber/PathSubscriber.php
+@@ -26,6 +26,12 @@ public function collectPaths(CollectPathsEvent $event): void {
+    * {@inheritdioc}
+    */
+   public static function getSubscribedEvents() {
++    // Local-test patch: tome_static ships disabled in config/sync/core.extension.yml,
++    // so its class is not autoloaded; guard the static reference so a
++    // site:install --existing-config can proceed without tome.
++    if (!class_exists(TomeStaticEvents::class)) {
++      return [];
++    }
+     $events[TomeStaticEvents::COLLECT_PATHS][] = ['collectPaths'];
+     return $events;
+   }
+diff --git a/web/modules/custom/usagov_benefit_category_search/usagov_benefit_category_search.module b/web/modules/custom/usagov_benefit_category_search/usagov_benefit_category_search.module
+index feb856b..968a984 100644
+--- a/web/modules/custom/usagov_benefit_category_search/usagov_benefit_category_search.module
++++ b/web/modules/custom/usagov_benefit_category_search/usagov_benefit_category_search.module
+@@ -143,7 +143,10 @@ function usagov_benefit_category_search_preprocess_node(array &$vars): void {
+     }
+     // Only show the block if there's a description on navigation cards page.
+     elseif (
+-      $vars["node"]->field_page_type->referencedEntities()[0]->getName() === 'Navigation Cards Page'
++      // Local-test patch: field_page_type can be empty on a freshly built
++      // basic_page; referencedEntities()[0] was then null and getName() fataled
++      // every full-page render (sweep row: unpopulated-field fatal).
++      ($vars["node"]->field_page_type->referencedEntities()[0]?->getName() ?? '') === 'Navigation Cards Page'
+       && $vars["node"]->field_benefits_callout_descr->value
+     ) {
+       $vars['usagov_show_benefits_landing_block'] = BenefitCategorySearchForm::showLandingPageBlock();
+@@ -161,7 +164,8 @@ function usagov_benefit_category_search_preprocess_html(array &$vars): void {
+   $vars['datalayer_hasBenefitCategories'] = FALSE;
+ 
+   if ($node instanceof Node && $node->getType() === 'basic_page') {
+-    $pageType = $node->field_page_type->referencedEntities()[0]->getName();
++    // Local-test patch: same unpopulated-field fatal as above.
++    $pageType = $node->field_page_type->referencedEntities()[0]?->getName() ?? '';
+     if ($pageType === 'Standard Page') {
+       // Provide list of categories for this page to gtm via taxonomy-data.
+       if ($terms = $node->field_benefits_category->referencedEntities()) {
+diff --git a/web/modules/custom/usagov_blog_date_menu/src/EventSubscriber/DatalayerAlterSubscriber.php b/web/modules/custom/usagov_blog_date_menu/src/EventSubscriber/DatalayerAlterSubscriber.php
+index a776513..3436c5f 100644
+--- a/web/modules/custom/usagov_blog_date_menu/src/EventSubscriber/DatalayerAlterSubscriber.php
++++ b/web/modules/custom/usagov_blog_date_menu/src/EventSubscriber/DatalayerAlterSubscriber.php
+@@ -32,6 +32,11 @@ public function __construct(
+    * {@inheritDoc}
+    */
+   public static function getSubscribedEvents(): array {
++    // Local-test patch: event class lives in usa_twig_vars, which is not yet
++    // loadable during install-time container rebuilds.
++    if (!class_exists(DatalayerAlterEvent::class)) {
++      return [];
++    }
+     return [
+       DatalayerAlterEvent::EVENT_NAME => 'onDatalayerAlter',
+     ];
+diff --git a/web/modules/custom/usagov_ssg_postprocessing/src/EventSubscriber/PagerPathSubscriber.php b/web/modules/custom/usagov_ssg_postprocessing/src/EventSubscriber/PagerPathSubscriber.php
+index 108da4b..1c3100c 100644
+--- a/web/modules/custom/usagov_ssg_postprocessing/src/EventSubscriber/PagerPathSubscriber.php
++++ b/web/modules/custom/usagov_ssg_postprocessing/src/EventSubscriber/PagerPathSubscriber.php
+@@ -92,6 +92,11 @@ protected function modifyUrl($url) {
+    * {@inheritdoc}
+    */
+   public static function getSubscribedEvents() {
++    // Local-test patch: event class lives in tome_static, which is not yet
++    // loadable during install-time container rebuilds.
++    if (!class_exists(TomeStaticEvents::class)) {
++      return [];
++    }
+     $events[TomeStaticEvents::MODIFY_DESTINATION][] = ['modifyDestination'];
+     $events[TomeStaticEvents::MODIFY_HTML][] = ['modifyHtml'];
+     return $events;
+diff --git a/web/modules/custom/usagov_ssg_postprocessing/src/EventSubscriber/RequestPrepareSubscriber.php b/web/modules/custom/usagov_ssg_postprocessing/src/EventSubscriber/RequestPrepareSubscriber.php
+index 38fad25..911334e 100644
+--- a/web/modules/custom/usagov_ssg_postprocessing/src/EventSubscriber/RequestPrepareSubscriber.php
++++ b/web/modules/custom/usagov_ssg_postprocessing/src/EventSubscriber/RequestPrepareSubscriber.php
+@@ -45,6 +45,11 @@ public function requestPrepare(): void {
+    * {@inheritdoc}
+    */
+   public static function getSubscribedEvents() {
++    // Local-test patch: event class lives in tome_static, which is not yet
++    // loadable during install-time container rebuilds.
++    if (!class_exists(TomeStaticEvents::class)) {
++      return [];
++    }
+     $events[TomeStaticEvents::REQUEST_PREPARE][] = ['requestPrepare'];
+     return $events;
+   }
+diff --git a/web/modules/custom/usagov_ssg_postprocessing/src/EventSubscriber/TomeEventSubscriber.php b/web/modules/custom/usagov_ssg_postprocessing/src/EventSubscriber/TomeEventSubscriber.php
+index b0a5515..2142305 100644
+--- a/web/modules/custom/usagov_ssg_postprocessing/src/EventSubscriber/TomeEventSubscriber.php
++++ b/web/modules/custom/usagov_ssg_postprocessing/src/EventSubscriber/TomeEventSubscriber.php
+@@ -339,6 +339,11 @@ private function getLetters(ViewExecutable $view): array {
+    * {@inheritdoc}
+    */
+   public static function getSubscribedEvents() {
++    // Local-test patch: event class lives in tome_static, which is not yet
++    // loadable during install-time container rebuilds.
++    if (!class_exists(TomeStaticEvents::class)) {
++      return [];
++    }
+     $events[TomeStaticEvents::MODIFY_HTML][] = ['modifyHtml'];
+     $events[TomeStaticEvents::COLLECT_PATHS][] = ['excludeDirectories'];
+     $events[TomeStaticEvents::COLLECT_PATHS][] = ['addAgencyIndexes'];
+diff --git a/web/modules/custom/usagov_wizard/src/EventSubscriber/DatalayerAlterSubscriber.php b/web/modules/custom/usagov_wizard/src/EventSubscriber/DatalayerAlterSubscriber.php
+index eed4d08..93b9dc4 100644
+--- a/web/modules/custom/usagov_wizard/src/EventSubscriber/DatalayerAlterSubscriber.php
++++ b/web/modules/custom/usagov_wizard/src/EventSubscriber/DatalayerAlterSubscriber.php
+@@ -22,6 +22,11 @@ public function __construct(
+    * {@inheritDoc}
+    */
+   public static function getSubscribedEvents() {
++    // Local-test patch: event class lives in usa_twig_vars, which is not yet
++    // loadable during install-time container rebuilds.
++    if (!class_exists(DatalayerAlterEvent::class)) {
++      return [];
++    }
+     return [
+       DatalayerAlterEvent::EVENT_NAME => 'onDatalayerAlter',
+     ];
+diff --git a/web/themes/custom/usagov/usagov.libraries.yml b/web/themes/custom/usagov/usagov.libraries.yml
+index be3d9ca..c8d3ff6 100644
+--- a/web/themes/custom/usagov/usagov.libraries.yml
++++ b/web/themes/custom/usagov/usagov.libraries.yml
+@@ -73,7 +73,8 @@ wizardStepTaxonomy:
+ 
+ carousel:
+   css:
+-    css/slick.min.css: {}
++    theme:
++      css/slick.min.css: {}
+   js:
+     scripts/slick.min.js: {}
+     scripts/passiveListeners.js: {}
