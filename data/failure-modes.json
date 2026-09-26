@@ -57,6 +57,56 @@
       "detection": "verify_page treats 5xx as dead, matches the critical-error marker, and flags 200s under 64 bytes as suspicious_short.",
       "evidenceStatus": "claimed",
       "citation": "mosaic-headless: 'WordPress's critical error screen is 2,697 bytes and larger than any naive healthy-page floor'"
+    },
+    {
+      "id": "unpopulated-field-fatal",
+      "plane": "verification",
+      "title": "Custom render code dereferences an optional field and fatals the whole site",
+      "symptom": "Every full-page render returns 500 after creating a node whose optional field is empty; every page, not just the new one.",
+      "rootCause": "Preprocess hooks / event subscribers do field_page_type->referencedEntities()[0]->getName() without an empty check; null propagates into the render pipeline sitewide.",
+      "detection": "verify_page on the new URL immediately after creation: server_error at 200-commit. Reproduced 3x in usagov_benefit_category_search (hook + subscriber).",
+      "evidenceStatus": "measured",
+      "citation": "usagov-2021 ddev bring-up 2026-09-26: nodes nids 11-15, verify_page server_error 2090-2229B, watchdog Call to a member function getName() on null"
+    },
+    {
+      "id": "library-css-category-assertion",
+      "plane": "verification",
+      "title": "A libraries.yml CSS entry without a category 500s every page that loads it",
+      "symptom": "HTTP 500 with AssertionError: Invalid CSS category, sitewide.",
+      "rootCause": "Drupal 9.5+ requires CSS assets under css: {base|theme|component|smart_admin}:. The usagov carousel library listed css/slick.min.css: {} bare.",
+      "detection": "verify_page: server_error despite successful theme install and config import.",
+      "evidenceStatus": "measured",
+      "citation": "usagov-2021 ddev bring-up 2026-09-26: homepage HTTP 500/3745B before fix, 200/16.7KB after"
+    },
+    {
+      "id": "install-order-subscriber-crash",
+      "plane": "state",
+      "title": "site:install --existing-config crashes on cross-module event-class references",
+      "symptom": "Install aborts with Class X not found in getSubscribedEvents() for a module that is not even the one being enabled.",
+      "rootCause": "ModuleInstaller rebuilds the kernel after EACH module enable; nothing declares cross-module dependencies, so subscribers compile before the module providing their event class is loadable.",
+      "detection": "Reproduced 4x from clean DBs. Guard getSubscribedEvents with class_exists; the events register correctly after the full batch.",
+      "evidenceStatus": "measured",
+      "citation": "usagov-2021 ddev bring-up 2026-09-26: 5 files patched, install then completed"
+    },
+    {
+      "id": "half-install-state",
+      "plane": "state",
+      "title": "A failed module enable leaves the module half-registered and bricks every drush command",
+      "symptom": "After one failed pm:enable, every drush command fatals with the same Class not found; the site is unbootstrappable.",
+      "rootCause": "ModuleInstaller writes module.<name> to core.extension BEFORE the container rebuild, so a compile failure leaves the module enabled but never installed.",
+      "detection": "Direct DB repair: remove the module row from the config table core.extension blob (scripts/agent-planes/repair-core-extension.php).",
+      "evidenceStatus": "measured",
+      "citation": "usagov-2021 ddev bring-up 2026-09-26: repaired via PDO, bootstrap restored"
+    },
+    {
+      "id": "undeclared-service-dependency",
+      "plane": "state",
+      "title": "A services.yml injecting a core service that the profile never enabled",
+      "symptom": "pm:enable fails: dependency on non-existent service file.repository — on a site whose config lists the file module.",
+      "rootCause": "usagov_benefit_finder_api hardcodes @file.repository; the minimal profile does not enable file, and no dependency is declared. GSA never hits it because they import a full DB.",
+      "detection": "Drupal::hasService(file.repository) === false on a clean minimal install; enabling file first resolves it.",
+      "evidenceStatus": "measured",
+      "citation": "usagov-2021 ddev bring-up 2026-09-26: clean minimal install, hasService false, enable-order fix"
     }
   ]
 }

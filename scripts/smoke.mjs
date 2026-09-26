@@ -9,7 +9,9 @@ const transport = new StdioClientTransport({
   env: {
     PATH: process.env.PATH,
     HOME: process.env.HOME,
-    DRUPAL_AGENT_ALLOW_EXEC: "false",
+    // Inherit plane configuration from the caller's env (see .env.example).
+    ...process.env,
+    DRUPAL_AGENT_ALLOW_EXEC: process.env.DRUPAL_AGENT_ALLOW_EXEC ?? "false",
   },
 });
 const client = new Client({ name: "smoke", version: "0.0.0" });

@@ -19,9 +19,15 @@ test("every row has the required fields", () => {
   }
 });
 
-test("seed rows are honest: nothing is marked measured yet", () => {
-  const measured = catalog.filter((row) => row.evidenceStatus === "measured");
-  assert.equal(measured.length, 0, "a row claims measured without a sweep behind it");
+test("evidence status is honest: every measured row cites its sweep", () => {
+  for (const row of catalog) {
+    if (row.evidenceStatus === "measured") {
+      assert.ok(
+        row.citation && /\d{4}-\d{2}-\d{2}/.test(row.citation),
+        `measured row ${row.id} must cite a dated sweep, got: ${row.citation}`,
+      );
+    }
+  }
 });
 
 test("failure mode ids are unique", () => {

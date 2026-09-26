@@ -30,6 +30,23 @@ test("diffConfig extra keys only when requested", () => {
   assert.deepEqual(diffConfig(actual, { a: 1 }, true).extra, ["b"]);
 });
 
+test("diffConfig subset semantics: extra nested siblings do not fail the match", () => {
+  const diff = diffConfig(
+    { page: { "403": "", "404": "", front: "/about-the-us" } },
+    { page: { front: "/about-the-us" } },
+  );
+  assert.equal(diff.verdict, "match");
+});
+
+test("diffConfig reports nested mismatches with dotted paths", () => {
+  const diff = diffConfig(
+    { page: { front: "/node" } },
+    { page: { front: "/about-the-us" } },
+  );
+  assert.equal(diff.verdict, "diff");
+  assert.equal(diff.mismatched[0]?.key, "page.front");
+});
+
 test("interpretPageProbe: 5xx is dead regardless of body", () => {
   const probe = interpretPageProbe(503, "<html>huge error wrapper</html>");
   assert.equal(probe.verdict, "server_error");

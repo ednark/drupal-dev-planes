@@ -25,6 +25,36 @@ export interface ConfigDiff {
   extra: string[];
 }
 
+type DiffCtx = Pick<ConfigDiff, "missing" | "mismatched">;
+
+/** Recursive SUBSET check: every expected key must exist and match; extra siblings are fine. */
+function compareSubset(
+  actual: Record<string, unknown>,
+  expected: Record<string, unknown>,
+  path: string,
+  ctx: DiffCtx,
+): void {
+  for (const [key, want] of Object.entries(expected)) {
+    const p = path ? `${path}.${key}` : key;
+    const have = actual[key];
+    if (want !== null && typeof want === "object" && !Array.isArray(want)) {
+      if (have === undefined) {
+        ctx.missing.push(p);
+        continue;
+      }
+      if (have !== null && typeof have === "object" && !Array.isArray(have)) {
+        compareSubset(have as Record<string, unknown>, want as Record<string, unknown>, p, ctx);
+      } else {
+        ctx.mismatched.push({ key: p, expected: want, actual: have });
+      }
+    } else if (!(key in actual)) {
+      ctx.missing.push(p);
+    } else if (canonicalize(have) !== canonicalize(want)) {
+      ctx.mismatched.push({ key: p, expected: want, actual: have });
+    }
+  }
+}
+
 /** Top-level diff of expected keys against the actual config object. */
 export function diffConfig(
   actual: Record<string, unknown>,
@@ -33,15 +63,7 @@ export function diffConfig(
 ): ConfigDiff {
   const missing: string[] = [];
   const mismatched: ConfigDiff["mismatched"] = [];
-  for (const [key, want] of Object.entries(expected)) {
-    if (!(key in actual)) {
-      missing.push(key);
-      continue;
-    }
-    if (canonicalize(actual[key]) !== canonicalize(want)) {
-      mismatched.push({ key, expected: want, actual: actual[key] });
-    }
-  }
+  compareSubset(actual, expected, "", { missing, mismatched });
   const extra = includeExtra
     ? Object.keys(actual).filter((k) => !(k in expected))
     : [];
