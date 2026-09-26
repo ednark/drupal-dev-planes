@@ -1,0 +1,61 @@
+{
+  "model": "llama31-8b-16k",
+  "tag": "llama31-8b",
+  "depth": "research",
+  "report": [
+    {
+      "id": "message",
+      "tier": 1,
+      "depth": "research",
+      "expertStatus": "answered",
+      "failHits": [],
+      "passCount": 1,
+      "citations": {
+        "cited": 2,
+        "resolvable": 2
+      },
+      "head": "## Objective Show a status message to the user in Drupal 10 custom module code. ## Summary To show a status message to the user, you can use the `\\\\Drupal::messenger()->addStatus()` function. There are various examples available in the provided evidence. ## Goals and non-goals "
+    },
+    {
+      "id": "sdc",
+      "tier": 2,
+      "depth": "research",
+      "expertStatus": "answered",
+      "failHits": [],
+      "passCount": 0,
+      "citations": {
+        "cited": 0,
+        "resolvable": 0
+      },
+      "head": "## Objective Determine the recommended way to create a reusable front-end component with its template, CSS, and JS colocated in one directory in Drupal 10.3+. ## Summary The evidence does not provide direct guidance on creating a reusable front-end component with its template, C"
+    },
+    {
+      "id": "recipes",
+      "tier": 2,
+      "depth": "research",
+      "expertStatus": "answered",
+      "failHits": [],
+      "passCount": 0,
+      "citations": {
+        "cited": 2,
+        "resolvable": 2
+      },
+      "head": "## Objective Determine a system to ship default configuration and content for another Drupal site to apply as one unit in Drupal 10.3+. ## Summary One method of shipping default configuration and content is using the \"configuration\" files. These files can be created within the m"
+    },
+    {
+      "id": "phpfloor",
+      "tier": 2,
+      "depth": "research",
+      "expertStatus": "answered",
+      "failHits": [
+        "/minimum[^.\\n]*8\\.[12]\\b/i"
+      ],
+      "passCount": 0,
+      "citations": {
+        "cited": 2,
+        "resolvable": 2
+      },
+      "head": "## Objective Determine the minimum required PHP version for Drupal 11. ## Summary The minimum PHP version required for Drupal 11 is 8.2, as stated in the project's `composer.json` file and echoed by various other sources, including core code. ## Goals and non-goals - Install an"
+    }
+  ]
+}
