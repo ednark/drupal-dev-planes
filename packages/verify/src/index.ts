@@ -147,3 +147,15 @@ export async function probePage(
 }
 
 export { loadFailureModes, type FailureMode, type Plane } from "./catalog.js";
+export {
+  checkClaimSupport,
+  stripCodeBlocks,
+  splitSentences,
+  extractValues,
+  extractSubjects,
+  CITATION_RE,
+  type ClaimRow,
+  type ClaimSupportReport,
+  type ClaimVerdict,
+  type SupportOptions,
+} from "./claims.js";

@@ -12,7 +12,14 @@ import {
   parseJsonLoose,
   runDrush,
 } from "@drupal-agent-planes/state";
-import { canonicalize, diffConfig, loadFailureModes, probePage } from "@drupal-agent-planes/verify";
+import {
+  canonicalize,
+  checkClaimSupport,
+  CITATION_RE,
+  diffConfig,
+  loadFailureModes,
+  probePage,
+} from "@drupal-agent-planes/verify";
 import { loadConfig, type ServerConfig } from "./config.js";
 
 // ---------------------------------------------------------------------------
@@ -337,6 +344,47 @@ async function main(): Promise<void> {
   );
 
   // ----- Cross-plane -----
+
+  server.registerTool(
+    "check_claim_support",
+    {
+      description: "Verification plane: does the cited evidence actually SUPPORT the answer's claims? Deterministic value-presence + version-assertion + subject-proximity checks per claim. Catches confident-wrong answers whose citations resolve but do not support.",
+      inputSchema: {
+        answer: z.string().min(1),
+        proximity_chars: z.number().int().positive().max(2000).optional(),
+      },
+      annotations: READ_ANNOTATIONS,
+    },
+    async ({ answer, proximity_chars }) => {
+      // Resolve every cited document through the knowledge plane.
+      const ids = [...new Set([...answer.matchAll(CITATION_RE)].map((m) => m[1] ?? "").filter((s) => s !== ""))];
+      const docs: Record<string, string> = {};
+      let unresolved = 0;
+      for (const id of ids) {
+        const doc = await knowledgeCall(config, "get_drupal_document", { document_id: id });
+        if (doc.status === "ok" && typeof (doc.data as { text?: unknown })?.text === "string") {
+          docs[id] = (doc.data as { text: string }).text;
+        } else {
+          unresolved++;
+        }
+      }
+      const report = checkClaimSupport(answer, docs, proximity_chars ? { proximityChars: proximity_chars } : {});
+      const notes = report.verdict === "unsupported"
+        ? ["unsupported claims found — do not accept this answer; re-ground or answer without the claim."]
+        : report.verdict === "weak"
+          ? ["weak support — values present but far from the claim's subject terms."]
+          : report.verdict === "uncited"
+            ? ["answer carries no drupal:// citations; nothing to check mechanically."]
+            : [];
+      if (unresolved > 0) notes.push(`${unresolved} cited document(s) could not be resolved through the knowledge plane.`);
+      notes.push("claim-support is presence/proximity evidence, not semantic entailment; treat 'supported' as necessary, not sufficient.");
+      return textResult(envelope("verification", "ok", {
+        verdict: report.verdict,
+        counts: report.counts,
+        claims: report.claims.slice(0, 20),
+      }, { source: "deterministic checks + drupal-dev-mcp document texts", checkedClaims: report.claims.length }, notes));
+    },
+  );
 
   server.registerTool(
     "explain_config",
