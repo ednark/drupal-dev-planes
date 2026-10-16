@@ -74,6 +74,10 @@ site root are configured.
 | `drush_dispatch` | state | **yes, gated** | Explicit drush invocation; unavailable unless `DRUPAL_AGENT_ALLOW_EXEC=true` |
 | `verify_config` | verification | none | Read back a config object, diff against expected, **verdict first** |
 | `verify_page` | verification | none | Probe a delivered URL: 5xx = dead, critical-error marker = dead, <64-byte 200 = suspicious |
+| `get_bundle_fields` | state | none | Field definitions for a bundle: name, type, required, cardinality |
+| `create_content` | writes | **yes, gated** | Catalog-checked entity create: refuses unpopulated required fields (`unpopulated-field-fatal`, measured), returns the paired verification contract + declared revert |
+| `verify_entity` | verification | none | Read back an entity and diff against what you intended; **verdict first** |
+| `delete_content` | writes | **yes, gated** | Delete by id/uuid — the declared revert path for `create_content` |
 | `explain_config` | cross-plane | none | Join: live state value + knowledge evidence for one config key |
 | `list_failure_modes` | cross-plane | none | The failure-mode catalog, with evidence status per row |
 
@@ -93,8 +97,45 @@ The matching agent skill (this repo's `SKILL.md`) encodes three rules:
    verify through `verify_config` and/or `verify_page` before claiming
    success — and treat a plain "config imported" as unverified delivery.
 
+## Harness kit
+
+The execution plan for the remaining layers (sweep harness, state widening,
+content verification, guarded writes, knowledge niche, reversibility, design
+layers) is [docs/site-builder-implementation-plan.md](docs/site-builder-implementation-plan.md).
+
+`kits/opencode/` ships the agentic engineering harness (Phases 1–2) from
+[docs/OpenCode Agentic Engineering Harness.md](docs/OpenCode%20Agentic%20Engineering%20Harness.md)
+as an installable OpenCode V2 kit — `lead` agent, protected-test subagents,
+slash commands, baseline permissions, and `.agent/` state files. Its agents
+bind to the three rules above. Install into a site project with
+`kits/opencode/install.sh <project-dir>`.
+
 ## Honest status
 
+- **Sweep harness: Phases 1–4 COMPLETE and gate green (2026-10-16).** All 11
+  measured failure-mode rows are backed by committed sweep records: three
+  verified against the live usagov2021 fixture (including a fresh
+  install-crash reproduction of the undeclared `file.repository` dependency
+  on the dedicated `usagov-sweep-scratch` scratch project), and the corpus
+  rows measured across B1 retrieval (8 fixtures) and B2 answerability
+  (llama31-8b-16k, with claim-support regression fixtures). `gate --apply`
+  writes ledger proposals for human review; `sweep:report` emits the
+  token-price table. Five cheap A1 rows remain `claimed` until their
+  instruments are added. See `sweep/records/`. Findings consolidated in
+  [docs/analysis-3-sweep-findings.md](docs/analysis-3-sweep-findings.md).
+- **Stage D loop closed (2026-10-16):** the B1 concept-bridge remedy (new
+  curated `drupal-concept-bridge-guidance` corpus in drupal-dev-mcp)
+  flipped corpus retrieval from 4 fails to **8/8 pass**, including rank-1
+  hits on the raw plain-language questions. B2 measures the remaining gap
+  honestly: synthesis grounding at 8B stays variance-dominated even with
+  retrieval fixed.
+- The **writes plane (Slice 1)** is implemented and unit-tested
+- The **writes plane (Slice 1)** is implemented and unit-tested
+  (`create_content`, `get_bundle_fields`, `verify_entity`, `delete_content`):
+  the required-field precondition is catalog-backed (`unpopulated-field-fatal`
+  is measured), but the new eval-based normalizers are **not yet swept**
+  against a live install — see
+  [docs/site-builder-implementation-plan.md](docs/site-builder-implementation-plan.md).
 - The failure-mode catalog is **seeded, not swept**: every row is
   `evidenceStatus: "claimed"`. A row graduates only after a live-site sweep
   reproduces the failure and proves the detection recipe catches it.

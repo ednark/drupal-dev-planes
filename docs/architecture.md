@@ -81,6 +81,8 @@ output shapes and must be swept the same way.
 
 ## Roadmap
 
+(Executed per [docs/site-builder-implementation-plan.md](site-builder-implementation-plan.md).)
+
 1. **Sweep the catalog.** Scratch Drupal site; reproduce each failure mode;
    verify the detection recipe; graduate rows to `measured`.
 2. **Sweep the normalizers** against Drush 12 output (status, pm:list,
@@ -92,6 +94,10 @@ output shapes and must be swept the same way.
    applied recipes) once the read surface is measured.
 5. **Guarded write path**: checkout → check (refuse what the catalog says
    breaks) → commit → verify, with the catalog as the check's rule set.
-6. **Multi-harness distribution**: this SKILL.md is the seed for Cursor rules
+6. **Design / UI / UX layers**: planned placement in
+   [docs/design-layers-plan.md](design-layers-plan.md) — design-aware plane
+   extensions plus a sibling design pack; gated behind this ladder.
+7. **Multi-harness distribution**: this SKILL.md is the seed for Cursor rules
    and Codex/Copilot rule files, mosaic-headless style — same discipline,
-   two transports.
+   two transports. First transport exists: `kits/opencode/` (harness
+   Phases 1–2, per `docs/OpenCode Agentic Engineering Harness.md`).
