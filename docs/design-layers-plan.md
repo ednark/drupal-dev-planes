@@ -1,9 +1,9 @@
 # Design / UI / UX layers — where they sit
 
 **Date:** 2026-10-16
-**Status:** plan (no implementation committed)
-**Related:** `docs/architecture.md` (three planes), `analysis-1-conclusions.md`,
-`sweep-harness-plan.md`, `kits/opencode/` (harness Phases 1–2)
+**Gated on the ladder in `site-builder-implementation-plan.md` (Stage E).**
+Complements `docs/sweep-harness-plan.md` (the harness this design reuses)
+and `docs/architecture.md` (the three planes this extends).
 
 ## 1. The thesis
 

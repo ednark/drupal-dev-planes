@@ -1,7 +1,10 @@
 # Implementation plan — the seven missing layers to a site-builder
 
 **Date:** 2026-10-16
-**Status:** plan (nothing built beyond what is cited below)
+**Status:** not tracked here — the sweep gate, the committed records in
+`sweep/records/`, and the roadmap in `docs/architecture.md` carry it. This
+document is the plan: the seven layers, their dependency shape, and the
+acceptance criteria per stage.
 **Related:** `docs/sweep-harness-plan.md` (detailed plan for Stage A),
 `docs/design-layers-plan.md` (detailed plan for Stage E),
 `docs/analysis-1-conclusions.md` (findings this plan answers),
@@ -9,15 +12,15 @@
 
 ## 0. The seven items, by current status
 
-| # | Item | Status |
+| # | Item | Spec |
 |---|---|---|
-| 1 | Sweep harness — mechanical, gated truth (failure-mode + corpus families) | planned in detail (`sweep-harness-plan.md`), not built |
-| 2 | State plane widening — typed reads of the content model | not built; 3 config/module-shaped reads only |
-| 3 | Content-level verification — assertions at building granularity | not built; `verify_page` is alive/dead + byte heuristics |
-| 4 | Guarded write path — semantic, catalog-checked, verification-paired writes | not built; `drush_dispatch` is a raw escape hatch |
-| 5 | Knowledge for the building niche — module selection, recipes, freshness | corpus built (core); niche unfilled; corpus sweeps (item 1) decide what earns tokens |
-| 6 | Reversibility — declared mutations, checkpoints, snapshots, scratch sites | not built for real sites; exists as a *principle* in the sweep plan |
-| 7 | Design / UI / UX layers | planned in detail (`design-layers-plan.md`), gated behind this ladder |
+| 1 | Sweep harness — mechanical, gated truth (failure-mode + corpus families) | detailed in `sweep-harness-plan.md` |
+| 2 | State plane widening — typed reads of the content model | reads land with the slices that need them (see Stage B) |
+| 3 | Content-level verification — assertions at building granularity | `verify_page` assertions, entity read-back (see Stage B) |
+| 4 | Guarded write path — semantic, catalog-checked, verification-paired writes | replaces `drush_dispatch`-as-escape-hatch (see Stage C slices) |
+| 5 | Knowledge for the building niche — module selection, recipes, freshness | corpus sweeps (item 1) decide what earns tokens |
+| 6 | Reversibility — declared mutations, checkpoints, snapshots, scratch sites | a *principle* in the sweep plan, productized in Stage C |
+| 7 | Design / UI / UX layers | detailed in `design-layers-plan.md`, gated behind this ladder |
 
 Dependency shape:
 
@@ -203,8 +206,6 @@ Size: L overall; each D-phase independently shippable.
    - Slice 1: `create_content` + `get_bundle_fields` + `verify_entity` +
      `delete_content` (revert) — the `unpopulated-field-fatal` row is
      already measured, so its precondition is catalog-backed on day one.
-     **Status: implemented 2026-10-16** (packages/writes; unit-tested;
-     eval-based normalizers pending live-site sweep).
    - Slice 2: `create_content_type` / `add_field` + display read-back.
    - Slice 3: `set_permissions` + `list_roles` / `get_role_permissions`.
    - Slice 4: `install_module` + the refusal path (precondition on the

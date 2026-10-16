@@ -72,12 +72,14 @@ per plane (a missing drupal-dev-mcp or drush never removes the other planes).
 
 ## Honest status: claimed vs measured
 
-Following the mosaic-headless discipline, `data/failure-modes.json` ships every
-row with `evidenceStatus: "claimed"`. Nothing is measured yet. Graduating a row
-requires a sweep against a live Drupal install that (1) reproduces the failure,
-(2) proves the detection recipe catches it, (3) records the result beside the
-row. Normalizers in `packages/state` are written defensively against Drush 12
-output shapes and must be swept the same way.
+Following the mosaic-headless discipline, `data/failure-modes.json` carries
+every row's `evidenceStatus` — `claimed` until graduated to `measured`.
+Graduation is enforced, not asserted: the sweep gate (`npm run sweep:gate`)
+requires a committed record in `sweep/records/` showing that a live sweep
+(1) reproduced the failure, (2) proved the detection recipe catches it,
+before a row may say `measured`. Normalizers in `packages/state` and
+`packages/writes` are written defensively against Drush output shapes and
+graduate through the same sweep discipline.
 
 ## Roadmap
 

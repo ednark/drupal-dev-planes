@@ -1,41 +1,24 @@
 # Sweep Harness — Implementation Plan
 
-**Status:** **Phases 1–4 COMPLETE** — implemented AND live-run 2026-10-16.
-Phase 1: all three failure-mode targets `pass` against the live usagov2021
-fixture. Phase 2 (B1): 8 corpus fixtures measured (4 pass, 4 retrieval
-gaps). Phase 3 (B2): answerability matrix live over llama31-8b-16k — every
-answer scored mechanically, full answer text committed, `sweep:regression`
-replays recorded answers as standing claim-support fixtures. Phase 4 (A2):
-all three scratch-install rows `pass` on the dedicated `usagov-sweep-scratch`
-ddev project — the install-order crash reproduced mid-install (DI fatal on
-the undeclared `file.repository` dependency, captured by provisioning),
-half-install detected and unbricked by the repair recipe (verified with a
-DEEP bootstrap+pm:list check), and the undeclared-dependency fatal measured
-to HALF-COMMIT (module stays in core.extension; `drush cr` fatals naming
-the missing service — the hazard the detection recipe now checks). Gate
-fully green (11/11 measured rows backed by records); `gate --apply` writes
-ledger proposals (3 doc merges, 3 observations, 2 proposed issues, with a
-`.bak` backup first); `sweep:report` emits the token-price table.
-Remaining catalog rows are `claimed` cheap A1 targets
-(config-import-without-rebuild, hook-update-noop, plugin-never-discovered,
-di-runtime-fatal, missing-cache-tag) — instruments to be added as needed.
-Earlier live-run lessons folded back into the
-not state the 8.3 floor (unsupported), and the route answer leaked
-`hook_menu` from model weights while citing nothing (uncited) — retrieval
-passed for that fixture, so the gap is synthesis grounding, not retrieval.
-Gate now reports only the 3 A2-class rows (scratch-install targets,
-Phase 4) as unbacked. Phase 4 remains as specified below; this document
-is the normative spec for them. Live-run lessons folded back into the
-tooling: ddev shims re-join drush args through a container shell
-(`shellJoined` transport flag + base64-wrapped `php:eval` in
-packages/writes), `runDrush` no longer hides spawn errors behind empty
-stderr, teardown health-check retries once for cache/opcache settling,
-bad-patch retargeted from the carousel library (attached only by absent
-nid-1 templates) to global-styling (attached sitewide).
+**Status:** not tracked here. The sweep gate (`npm run sweep:gate`) and the
+committed records in `sweep/records/` are the source of truth for what is
+implemented and measured; `docs/analysis-3-sweep-findings.md` narrates what
+the runs found. This document is the normative spec for the sweep families,
+gate rules, and phases.
+
+**Live-run lessons (design rationale, folded back into the tooling):** ddev
+shims re-join drush args through a container shell (`shellJoined` transport
+flag + base64-wrapped `php:eval` in packages/writes); `runDrush` must not
+hide spawn errors behind empty stderr; teardown health-checks retry once
+for cache/opcache settling; stored bad-patches must target libraries the
+fixture actually loads; `timeout_ms` tool schemas cap sweep calls; stale
+ddev volumes prompt DROP-tables on reinstall, so fresh provisioning removes
+the project by name first.
+
 **Date:** 2026-09-26
 **Related:** `docs/architecture.md` (three planes), `docs/analysis-1-conclusions.md`
-(assessment + recommendations), `data/failure-modes.json` (11 rows, 5 hand-measured),
-`drupal-dev-mcp/data/corpus-issues.json` (3 ledger entries),
+(assessment + recommendations), `data/failure-modes.json` (the failure-mode
+catalog), `drupal-dev-mcp/data/corpus-issues.json` (the corpus ledger),
 `scripts/*-eval.mjs` (ad-hoc evals this plan formalizes).
 
 ## 1. Problem
