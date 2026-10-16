@@ -269,6 +269,7 @@ tests/         unit tests, one file per plane or instrument
 | [docs/analysis-1-conclusions.md](docs/analysis-1-conclusions.md) | the first live bring-up: what the planes caught, what they missed |
 | [docs/analysis-2-community-research.md](docs/analysis-2-community-research.md) | the community landscape (harness engineering, self-correction literature) around this design |
 | [docs/analysis-3-sweep-findings.md](docs/analysis-3-sweep-findings.md) | consolidated findings from the live sweep runs |
+| [docs/analysis-4-proxy-frictions.md](docs/analysis-4-proxy-frictions.md) | integration frictions between the knowledge-plane proxy and drupal-dev-mcp |
 | [docs/design-layers-plan.md](docs/design-layers-plan.md) | where Design/UI/UX verification will sit |
 | [docs/OpenCode Agentic Engineering Harness.md](docs/OpenCode%20Agentic%20Engineering%20Harness.md) | the harness methodology the kit implements |
 
