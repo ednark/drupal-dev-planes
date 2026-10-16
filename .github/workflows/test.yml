@@ -10,4 +10,13 @@ jobs:
           node-version: 22
       - run: npm install
       - run: npm run build
+      # Static checks: the build compiles, but typecheck also covers the test
+      # files and the sweep-instrument declarations.
+      - run: npm run typecheck
       - run: npm test
+      # Offline integration: spawn the server with no fixture and assert the
+      # graceful-degradation paths (knowledge/state unavailable, writes gated).
+      - run: npm run smoke
+      # Evidence gate: every `measured` catalog row must be backed by a valid
+      # committed record. Runs offline against the committed records + catalog.
+      - run: npm run sweep:gate

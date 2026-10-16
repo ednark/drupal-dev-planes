@@ -67,6 +67,21 @@ export function validateRecord(record) {
   if (record.family !== "corpus" && record.detect && typeof record.detect.tool !== "string") {
     errors.push("detect.tool is required (which plane tool ran the recipe)");
   }
+  // A detect verdict of "pass" must not be contradicted by its own recorded
+  // outcomes: any required step with a nonzero exitCode or ok:false invalidates
+  // the pass. (This is the rule that catches the half-install false-positive,
+  // where a failed repair/cr was recorded as a passing recovery.)
+  if (record.family !== "corpus" && record.detect?.verdict === "pass" && Array.isArray(record.detect.outcomes)) {
+    for (const o of record.detect.outcomes) {
+      if (!o?.required) continue;
+      const failedExit = typeof o.exitCode === "number" && o.exitCode !== 0;
+      const failedOk = o.ok === false;
+      const unresolved = o.exitCode === "?" || o.exitCode === undefined && o.ok === undefined;
+      if (failedExit || failedOk || unresolved) {
+        errors.push(`detect.verdict "pass" contradicted by required outcome '${o.step}' (${failedExit ? `exit=${o.exitCode}` : failedOk ? "ok=false" : "unresolved"})`);
+      }
+    }
+  }
   if (!record.fixture || typeof record.fixture !== "object") errors.push("fixture is required (site, url, drupal)");
   if (!Array.isArray(record.mutations)) errors.push("mutations must be an array (declared mutations, each with reverted flag)");
   if (!VERDICTS.includes(record.verdict)) errors.push(`verdict must be one of ${VERDICTS.join(", ")}`);

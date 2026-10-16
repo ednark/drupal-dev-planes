@@ -259,7 +259,7 @@ const installOrderSubscriberCrash = {
     const status = await call(ctx.client, "get_site_status", {});
     const degraded = status.status !== "ok";
     const probe = await call(ctx.client, "verify_page", { url: ctx.fixture.url });
-    const dead = ["server_error", "error_page", "fetch_failed"].includes(probe?.data?.verdict);
+    const dead = ["server_error", "error_page", "fetch_failed", "http_error", "suspicious_short"].includes(probe?.data?.verdict);
     return {
       verdict: degraded || dead ? "pass" : "fail",
       tool: "get_site_status + verify_page",
@@ -318,20 +318,35 @@ const halfInstallState = {
     const { promisify } = await import("node:util");
     const run = promisify(execFile);
     let repairExit = "?";
+    let repairErr = "";
     try {
       await run("ddev", ["-p", SCRATCH_PROJECT_NAME, "exec", "php", "scripts/agent-planes/repair-core-extension.php", STUB_MODULE], { timeout: 300_000 });
       repairExit = 0;
     } catch (e) {
       repairExit = e.code ?? 1;
+      repairErr = String(e.stderr ?? e.message ?? "").replace(/\s+/g, " ").slice(0, 200);
     }
     const cr = await call(ctx.client, "drush_dispatch", { args: ["cr"], timeout_ms: 120_000 });
+    const crExit = cr?.data?.exitCode;
     const status = await call(ctx.client, "get_site_status", {});
     const modules = await call(ctx.client, "list_site_modules", {});
-    const recovered = status.status === "ok" && modules.status === "ok";
+    // Recovery recipe: EVERY step must succeed. A nonzero repair or cr exit
+    // means the site is still bricked. Recording pass while repair/cr failed
+    // was the false-positive this instrument previously shipped.
+    const recovered = repairExit === 0 && crExit === 0 && status.status === "ok" && modules.status === "ok";
     return {
       verdict: recovered ? "pass" : "fail",
       tool: "repair script (ddev exec php, PDO-direct) + cr + get_site_status + list_site_modules",
-      detail: `repair exit=${repairExit}, cr exit=${cr?.data?.exitCode}, bootstrap=${status?.status}, pm:list=${modules?.status} (deep recovery check; recipe must unbrick)`,
+      detail: `repair exit=${repairExit}${repairErr ? ` (${repairErr})` : ""}, cr exit=${crExit}, bootstrap=${status?.status}, pm:list=${modules?.status} (recovery recipe: all four must be green)`,
+      // Machine-readable outcomes so the gate can refuse a pass its own
+      // evidence contradicts: a required step with a nonzero exit / ok:false
+      // makes detect.verdict "pass" invalid.
+      outcomes: [
+        { step: "repair-core-extension", exitCode: repairExit, required: true },
+        { step: "cr", exitCode: crExit, required: true },
+        { step: "get_site_status", ok: status.status === "ok", required: true },
+        { step: "list_site_modules", ok: modules.status === "ok", required: true },
+      ],
     };
   },
 };

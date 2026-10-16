@@ -46,14 +46,14 @@ export interface CreateContentPayload {
   fields: Record<string, unknown>;
 }
 
-export function createContentSnippet(payload: CreateContentPayload): string {
+export function createContentSnippet(payload: Record<string, unknown>): string {
   const encoded = phpPayload(payload);
   return [
     `$p = json_decode(base64_decode('${encoded}'), true);`,
     `$r = ['errors' => [], 'id' => null, 'uuid' => null, 'bundle' => null];`,
     `try {`,
     `  $storage = \\Drupal::entityTypeManager()->getStorage($p['entity_type']);`,
-    `  $values = is_array($p['values']) ? $p['values'] : [];`,
+    `  $values = [];`,
     `  if ($p['entity_type'] === 'node') { $values['type'] = $p['bundle']; $values['title'] = $p['title']; }`,
     `  if (array_key_exists('published', $p)) { $values['status'] = $p['published'] ? 1 : 0; }`,
     `  $entity = $storage->create($values);`,
@@ -148,12 +148,29 @@ export function fetchFieldDefs(
   );
 }
 
+/**
+ * Map the camelCase payload to the snake_case wire shape the PHP snippet
+ * reads. Without this, `moderationState` never reached `$p['moderation_state']`
+ * and moderated bundles silently stayed in their initial state.
+ */
+export function createContentWire(payload: CreateContentPayload): Record<string, unknown> {
+  return {
+    entity_type: payload.entity_type,
+    bundle: payload.bundle,
+    title: payload.title,
+    published: payload.published,
+    fields: payload.fields,
+    ...(payload.alias !== undefined ? { alias: payload.alias } : {}),
+    ...(payload.moderationState !== undefined ? { moderation_state: payload.moderationState } : {}),
+  };
+}
+
 export function createContent(
   config: DrushConfig,
   payload: CreateContentPayload,
   timeoutMs?: number,
 ): Promise<EvalOutcome<CreateContentResult>> {
-  return phpEval<unknown>(config, createContentSnippet(payload), timeoutMs).then((r) =>
+  return phpEval<unknown>(config, createContentSnippet(createContentWire(payload)), timeoutMs).then((r) =>
     r.ok ? { ok: true, value: normalizeCreateContentResult(r.value) } : r,
   );
 }

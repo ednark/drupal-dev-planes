@@ -1,7 +1,12 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
-export type Plane = "knowledge" | "state" | "verification" | "cross-plane";
+/**
+ * The four working planes plus the cross-plane join label. Kept in sync with
+ * the server envelope's Plane type (packages/server/src/shared.ts); a failure
+ * mode's `plane` names the plane whose tool detects it.
+ */
+export type Plane = "knowledge" | "state" | "verification" | "writes" | "cross-plane";
 
 export interface FailureMode {
   id: string;

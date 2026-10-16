@@ -74,8 +74,10 @@ export function diffConfig(
 
 export type PageVerdict =
   | "alive"
+  | "content_missing"
   | "error_page"
   | "server_error"
+  | "http_error"
   | "suspicious_short"
   | "fetch_failed";
 
@@ -89,10 +91,15 @@ export interface PageProbeResult {
 }
 
 /**
- * A delivered page is the only evidence of delivery. Thresholds adapted from
- * mosaic-headless's measured practice (5xx = dead regardless of body; tiny
- * bodies under a 200 are a silent failure mode) and must be re-measured
- * against Drupal's actual critical-error screen before being trusted.
+ * A delivered page is the only evidence of delivery. The verdict distinguishes
+ * TRANSPORT success (a response came back) from DELIVERY success (the right
+ * page arrived), so an agent never has to override `alive` by reading another
+ * field. Precedence, most-severe first:
+ *   server_error (5xx) > error_page (Drupal critical-error marker) >
+ *   http_error (4xx) > suspicious_short (empty/tiny body) >
+ *   content_missing (delivered but the expected text is absent) > alive.
+ * Thresholds adapted from mosaic-headless's measured practice; re-measured
+ * against the live fixture (sweep record: critical-error-page).
  */
 export function interpretPageProbe(
   httpStatus: number,
@@ -121,24 +128,34 @@ export function interpretPageProbe(
       expected: assertion,
     };
   }
-  if (httpStatus === 200 && byteSize > 0 && byteSize < 64) {
+  if (httpStatus >= 400) {
+    return {
+      verdict: "http_error",
+      httpStatus,
+      byteSize,
+      detail: `${httpStatus} is not a delivered page (404 = missing, 403 = access denied) — do not treat as alive`,
+      expected: assertion,
+    };
+  }
+  if (byteSize < 64) {
     return {
       verdict: "suspicious_short",
       httpStatus,
       byteSize,
-      detail: "200 with a very short body — matches the tiny-error-string failure mode",
+      detail: "delivered body is empty or under 64 bytes — matches the tiny-error-string failure mode",
       expected: assertion,
     };
   }
-  return {
-    verdict: "alive",
-    httpStatus,
-    byteSize,
-    detail: assertion && !assertion.present
-      ? "page delivered but the expected content is MISSING — treat as not delivered"
-      : "page delivered",
-    expected: assertion,
-  };
+  if (assertion && !assertion.present) {
+    return {
+      verdict: "content_missing",
+      httpStatus,
+      byteSize,
+      detail: `page delivered but the expected content "${assertion.needle}" is MISSING — treat as not delivered`,
+      expected: assertion,
+    };
+  }
+  return { verdict: "alive", httpStatus, byteSize, detail: "page delivered", expected: assertion };
 }
 
 export async function probePage(

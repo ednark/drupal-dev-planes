@@ -2,70 +2,17 @@
 // catalog preconditions and verification pairings live with each tool.
 
 import { type McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import type { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { z } from "zod";
-import { callKnowledgeTool, connectKnowledge } from "@drupal-dev-planes/knowledge";
 import {
-  checkRoute,
-  findContent,
-  findTerm,
-  getWatchdog,
-  listMenus,
-  listRoles,
-  listViews,
-  maskSecrets,
-  normalizeConfigValue,
-  normalizeModules,
-  normalizeStatus,
-  parseJsonLoose,
-  runDrush,
+  checkRoute, findContent, findTerm, getWatchdog, listMenus, listRoles, listViews,
+  maskSecrets, normalizeModules, normalizeStatus, parseJsonLoose, runDrush,
   WATCHDOG_SEVERITY_NAMES,
 } from "@drupal-dev-planes/state";
+import { fetchFieldDefs } from "@drupal-dev-planes/writes";
+import { type ServerConfig } from "../config.js";
 import {
-  canonicalize,
-  checkClaimSupport,
-  CITATION_RE,
-  diffConfig,
-  loadFailureModes,
-  probePage,
-} from "@drupal-dev-planes/verify";
-import { loadConfig, type ServerConfig } from "../config.js";
-import {
-  createContent,
-  createContentType,
-  deleteContent,
-  diffEntityValues,
-  fetchFieldDefs,
-  missingRequiredValues,
-  nodeTypeExists,
-  readbackEntity,
-  addField,
-  installModuleCheck,
-  isEntityType,
-  isFieldType,
-  normalizeCreateContentTypeResult,
-  normalizeAddFieldResult,
-  placeBlock,
-  readbackDisplayComponent,
-  setDisplayComponent,
-  setPermissions,
-  type EntityType,
-} from "@drupal-dev-planes/writes";
-
-import {
-  envelope,
-  textResult,
-  stateUnavail,
-  READ_ANNOTATIONS,
-  requireExecGate,
-  drushProvenance,
-  drushConfig,
-  asObject,
-  readConfigObject,
-  ENTITY_TYPE_ENUM,
-  parseEntityType,
-  knowledgeCall,
+  envelope, textResult, stateUnavail, READ_ANNOTATIONS, drushProvenance, drushConfig,
+  readConfigObject, ENTITY_TYPE_ENUM, parseEntityType,
 } from "../shared.js";
 
 export function registerStateToolRegistrations(server: McpServer, config: ServerConfig): void {
@@ -150,8 +97,6 @@ export function registerStateToolRegistrations(server: McpServer, config: Server
       ]));
     },
   );
-
-  // ----- Verification plane -----
 
   server.registerTool(
     "list_views",
@@ -291,8 +236,6 @@ export function registerStateToolRegistrations(server: McpServer, config: Server
       return textResult(envelope("state", "ok", { count: read.value.length, terms: read.value }, drushProvenance(config)));
     },
   );
-
-  // ----- Writes plane (guarded semantic writes; gated) -----
 
   server.registerTool(
     "get_bundle_fields",

@@ -1,8 +1,24 @@
 # kits/opencode — Agentic Engineering Harness (Phases 1–2)
 
+> **Experimental example, not a turnkey harness.** This kit is a starting
+> point that has not been exercised end-to-end against a live OpenCode V2
+> install. Known gaps, stated honestly:
+> - The agent permission blocks now allow the `drupal-dev-planes` MCP tools
+>   (`action: "drupal_dev_planes_*"`), but per-agent scoping of *write* vs
+>   *read* MCP tools is not enforced here — the real write control is the
+>   server-side `DRUPAL_AGENT_ALLOW_EXEC` gate. If you enable that gate, any
+>   agent allowed the MCP tools can call the write tools.
+> - `install.sh` copies `.opencode/` wholesale: it refuses to overwrite an
+>   existing `lead.md` or `.agent/`, but it will overwrite other files under
+>   a pre-existing `.opencode/`. It does **not** install this repo's root
+>   `SKILL.md` into the target — copy or symlink it yourself.
+> - The `compaction`, `steps`, and `opencode run` behaviors referenced below
+>   are from the harness plan and need confirming against your OpenCode
+>   version (see "Verify before relying on").
+
 Installable OpenCode V2 harness implementing the plan in
 `docs/OpenCode Agentic Engineering Harness.md`, composed with this repo's
-`SKILL.md` (the three-plane Drupal discipline).
+`SKILL.md` (the four-plane Drupal discipline).
 
 ## What is in the kit
 
@@ -103,6 +119,6 @@ into smaller-window subagents.
 
 - `docs/OpenCode Agentic Engineering Harness.md` (the plan this kit
   implements)
-- `SKILL.md` (the three-plane discipline the agents bind to)
+- `SKILL.md` (the four-plane discipline the agents bind to)
 - OpenCode V2 docs: `/v2/docs/agents/`, `/v2/docs/commands/`,
   `/v2/docs/build/plugins/` (plugins are Phase 3+)

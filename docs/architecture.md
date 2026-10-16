@@ -1,11 +1,12 @@
 # Architecture: drupal-dev-planes
 
-Three planes of truth for Drupal development agents, composed as one MCP
-interface.
+Four planes for Drupal development agents, composed as one MCP interface:
+three planes of *evidence* (knowledge, state, verification) and one guarded
+*action* surface (writes).
 
-## Why three planes
+## Why these planes
 
-An agent doing Drupal work conflates three different kinds of truth, each with
+An agent doing Drupal work conflates different kinds of truth, each with
 different freshness, authority, and failure characteristics:
 
 | Plane | Question | Truth lives in | Failure mode when conflated |
@@ -13,12 +14,16 @@ different freshness, authority, and failure characteristics:
 | **knowledge** | What is true in Drupal 11.4? | Versioned, cited, measured corpus (drupal-dev-mcp index) | Guessing APIs from stale training data ("Drupal 7-shaped hooks") |
 | **state** | What is true on *this site* right now? | The running site: config, modules, entities, routes | Editing YAML blind, assuming state |
 | **verification** | Did the write actually take effect? | The delivered result, not the commit response | Trusting a 0 exit code / HTTP 200 |
+| **writes** | What may be committed, and how is it undone? | Guarded tools that check preconditions, apply, and name their verification | Raw writes that skip the catalog and leave half-committed state |
 
-The design principle, borrowed from mosaic-headless (our predecessor Drupal
-harness project): **never trust the
-commit**. A successful write is not evidence of a working site. Every mutation
-must be followed by a read-back through the verification plane, and the
-verification plane must know Drupal's silent failure modes explicitly.
+Writes is an *action* surface rather than a fourth kind of truth: it is the
+only plane with side effects, it is gated, and every tool pairs its apply with
+a verification recipe (returned as a note, or performed in-tool for
+`configure_display`). The design principle, adapted from mosaic-headless (an
+earlier Drupal harness): **never trust the commit**. A successful write is not
+evidence of a working site. Every mutation must be followed by a read-back
+through the verification plane, and the verification plane must know Drupal's
+silent failure modes explicitly.
 
 ## Composition, not reimplementation
 
@@ -32,26 +37,30 @@ evidence, closed world); this repo owns composition and cross-plane joins.
 │  docs/integration-agent-loops.md for the loop-side contract)
 │
 ├─ packages/knowledge  → knowledge plane: MCP client of drupal-dev-mcp
-├─ packages/state      → state plane: drush-backed normalized reads
-├─ packages/verify     → verification plane: read-back diffs + page probes
-├─ packages/server     → one stdio MCP server exposing all three planes
+├─ packages/state      → state plane: drush-backed normalized reads + the
+│                         shared php:eval transport
+├─ packages/verify     → verification plane: page probes, config/entity diffs,
+│                         claim support, the failure-mode catalog loader
+├─ packages/writes     → writes plane: guarded content/type/field/permission/
+│                         module/block/display ops (precondition → apply → verify)
+├─ packages/server     → one stdio MCP server: shared.ts (envelope + transport)
+│                         + tools/<plane>.ts, one registration module per plane
 └─ data/failure-modes.json → the measured-vs-claimed failure-mode catalog
 ```
 
-## Tool map (0.1)
+## Tool map
 
-| Tool | Plane | Annotations | What it does |
+The full, current tool table lives in the [README](../README.md#tools) — one
+place, so it cannot drift from the registered tools. The plane → package
+mapping is what this document owns:
+
+| Plane | Package | Server module | Side effects |
 |---|---|---|---|
-| `get_index_status` | knowledge | read-only | Proxy: drupal-dev-mcp build readiness |
-| `search_drupal` | knowledge | read-only | Proxy: cited evidence search |
-| `get_drupal_document` | knowledge | read-only | Proxy: exact indexed text for citation checks |
-| `get_site_status` | state | read-only | Normalized `drush status` |
-| `get_site_config` | state | read-only | Normalized, secret-masked `drush config:get` |
-| `list_site_modules` | state | read-only | Normalized `drush pm:list` |
-| `drush_dispatch` | state | **destructive, gated** | Explicit drush invocation; unavailable unless `DRUPAL_AGENT_ALLOW_EXEC=true` |
-| `verify_config` | verification | read-only | Read back a config object, diff against expected, verdict first |
-| `verify_page` | verification | read-only | Probe a delivered URL: 5xx = dead, critical-error marker = dead, <64-byte 200 = suspicious |
-| `list_failure_modes` | cross-plane | read-only | The failure-mode catalog with evidence status per row |
+| knowledge | `packages/knowledge` | `tools/knowledge.ts` | none (proxied reads) |
+| state | `packages/state` | `tools/state.ts` | none, except the gated `drush_dispatch` escape hatch |
+| verification | `packages/verify` | `tools/verification.ts` | none |
+| writes | `packages/writes` | `tools/writes.ts` | **yes** — gated by `DRUPAL_AGENT_ALLOW_EXEC` |
+| cross-plane | (joins) | `tools/cross_plane.ts` | none |
 
 ## Response envelope
 
@@ -60,15 +69,21 @@ Every tool returns:
 ```json
 {
   "plane": "verification",
-  "status": "ok | state_unavailable | knowledge_unavailable | unavailable | error",
+  "status": "ok | refused | state_unavailable | knowledge_unavailable | unavailable | error",
   "data": { "verdict": "...", "...": "..." },
   "notes": ["pointers to failure modes and next verification steps"],
   "provenance": { "source": "...", "siteRoot": "..." }
 }
 ```
 
-Verdict-first where a verdict exists; provenance always; graceful degradation
-per plane (a missing drupal-dev-mcp or drush never removes the other planes).
+`status` semantics: `ok` (the call ran; for verification, `data.verdict`
+carries the actual result — a `verify_page` can be `status: ok` with
+`verdict: server_error`); `refused` (a write precondition failed, the site was
+not touched); `state_unavailable` / `knowledge_unavailable` (that plane cannot
+be reached — each carries a recovery hint in `notes`); `unavailable` (the tool
+is gated off); `error` (the call ran and failed). Verdict-first where a verdict
+exists; provenance always; graceful degradation per plane (a missing
+drupal-dev-mcp or drush never removes the other planes).
 
 ## Honest status: claimed vs measured
 

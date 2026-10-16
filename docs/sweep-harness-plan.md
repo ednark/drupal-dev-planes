@@ -16,7 +16,7 @@ ddev volumes prompt DROP-tables on reinstall, so fresh provisioning removes
 the project by name first.
 
 **Date:** 2026-09-26
-**Related:** `docs/architecture.md` (three planes), `docs/analysis-1-conclusions.md`
+**Related:** `docs/architecture.md` (the planes), `docs/analysis-1-conclusions.md`
 (assessment + recommendations), `data/failure-modes.json` (the failure-mode
 catalog), `drupal-dev-mcp/data/corpus-issues.json` (the corpus ledger),
 `scripts/*-eval.mjs` (ad-hoc evals this plan formalizes).

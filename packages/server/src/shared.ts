@@ -2,57 +2,11 @@
 // client for the knowledge plane (drupal-dev-mcp). Tool registration lives in
 // ./tools/*.ts, one module per plane; this is what they share.
 
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import type { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { z } from "zod";
 import { callKnowledgeTool, connectKnowledge } from "@drupal-dev-planes/knowledge";
-import {
-  checkRoute,
-  findContent,
-  findTerm,
-  getWatchdog,
-  listMenus,
-  listRoles,
-  listViews,
-  maskSecrets,
-  normalizeConfigValue,
-  normalizeModules,
-  normalizeStatus,
-  parseJsonLoose,
-  runDrush,
-  WATCHDOG_SEVERITY_NAMES,
-} from "@drupal-dev-planes/state";
-import {
-  canonicalize,
-  checkClaimSupport,
-  CITATION_RE,
-  diffConfig,
-  loadFailureModes,
-  probePage,
-} from "@drupal-dev-planes/verify";
-import { loadConfig, type ServerConfig } from "./config.js";
-import {
-  createContent,
-  createContentType,
-  deleteContent,
-  diffEntityValues,
-  fetchFieldDefs,
-  missingRequiredValues,
-  nodeTypeExists,
-  readbackEntity,
-  addField,
-  installModuleCheck,
-  isEntityType,
-  isFieldType,
-  normalizeCreateContentTypeResult,
-  normalizeAddFieldResult,
-  placeBlock,
-  readbackDisplayComponent,
-  setDisplayComponent,
-  setPermissions,
-  type EntityType,
-} from "@drupal-dev-planes/writes";
+import { normalizeConfigValue, parseJsonLoose, runDrush } from "@drupal-dev-planes/state";
+import { isEntityType, type EntityType } from "@drupal-dev-planes/writes";
+import { type ServerConfig } from "./config.js";
 
 // ---------------------------------------------------------------------------
 // Envelope: every response names its plane, its status, and its provenance.

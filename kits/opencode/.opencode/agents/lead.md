@@ -15,6 +15,7 @@ permissions:
   - { action: edit, resource: ".agent/ledger.md", effect: ask }
   - { action: read, resource: "**/.env*", effect: deny }
   - { action: skill, resource: "*", effect: allow }
+  - { action: "drupal_dev_planes_*", resource: "*", effect: allow }  # MCP tools; writes are gated server-side by DRUPAL_AGENT_ALLOW_EXEC
   - { action: shell, resource: "git status", effect: allow }
   - { action: shell, resource: "git diff*", effect: allow }
   - { action: shell, resource: "git log*", effect: allow }

@@ -6,6 +6,7 @@ import {
   normalizeCreateContentResult,
   normalizeFieldDefs,
   createContentSnippet,
+  createContentWire,
   entityReadbackSnippet,
   phpPayload,
   parseTrailingJson,
@@ -152,6 +153,37 @@ test("entityReadbackSnippet accepts id, uuid, or both", () => {
   assert.ok(entityReadbackSnippet("node", 7, null).length > 0);
   assert.ok(entityReadbackSnippet("node", null, "abc").length > 0);
   assert.ok(entityReadbackSnippet("node", 7, "abc").length > 0);
+});
+
+test("createContentWire maps camelCase payload to the snake_case PHP keys", () => {
+  const wire = createContentWire({
+    entity_type: "node",
+    bundle: "basic_page",
+    title: "T",
+    published: true,
+    moderationState: "published",
+    alias: "/t",
+    fields: {},
+  });
+  // The snippet reads $p['moderation_state'] and $p['alias'] — the wire shape
+  // must carry exactly those keys (the bug: moderationState never matched).
+  assert.equal(wire["moderation_state"], "published");
+  assert.equal(wire["alias"], "/t");
+  assert.ok(!("moderationState" in wire));
+  const snippet = createContentSnippet(wire);
+  assert.ok(snippet.includes("$p['moderation_state']"));
+  // and the encoded payload actually contains the snake_case key
+  const b64 = snippet.match(/base64_decode\('([^']+)'\)/)?.[1] ?? "";
+  const decoded = JSON.parse(Buffer.from(b64, "base64").toString("utf8"));
+  assert.equal(decoded.moderation_state, "published");
+});
+
+test("createContentWire omits optional keys when absent", () => {
+  const wire = createContentWire({
+    entity_type: "node", bundle: "b", title: "T", published: false, fields: {},
+  });
+  assert.ok(!("alias" in wire));
+  assert.ok(!("moderation_state" in wire));
 });
 
 // ---------------------------------------------------------------------------

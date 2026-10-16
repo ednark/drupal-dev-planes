@@ -22,13 +22,20 @@ catalog citations now cite the committed records.
   that install stage. Record:
   `2026-10-16-fm-install-order-subscriber-crash.json`.
 - **`half-install-state`** — `pm:enable` of a module with an undeclared
-  service dependency bricks the site. Two repair-relevant facts measured:
-  the repair recipe must run through **`ddev exec php`** (PDO-direct), not
-  `drush php:script` — drush cannot bootstrap the bricked site it is asked
-  to repair; and recovery must be verified **deeply** (`get_site_status` AND
-  `list_site_modules`) — status alone reported "recovered" on a site whose
-  module handler was broken. Record:
-  `2026-10-16-fm-half-install-state.json`.
+  service dependency bricks the site (this part reproduced). The *recovery*
+  recipe, however, did **not** verify on the 2026-10-16 scratch run: the
+  repair script exited 1 and the follow-up `cr` exited 1, so the site was
+  never provably unbricked. The first record claimed `pass` on that failed
+  recovery — a false positive caught in the release-hardening review. The
+  record was removed, the row **downgraded `measured` → `claimed`**, and the
+  instrument fixed to require repair exit 0 AND cr exit 0 AND
+  `get_site_status` ok AND `list_site_modules` ok, emitting machine-readable
+  `outcomes` the gate now checks (a `pass` detect contradicted by a failed
+  required outcome is rejected). Re-measurement is pending a corrected
+  scratch run. Two repair facts still stand from the run: the recipe must go
+  through **`ddev exec php`** (PDO-direct), not `drush php:script` (drush
+  cannot bootstrap the bricked site it is asked to repair); and recovery must
+  be checked **deeply** (`get_site_status` AND `list_site_modules`).
 - **`undeclared-service-dependency`** — the important new behavior:
   **the failed enable half-commits.** `pm:enable` fatals at container compile
   AND the module remains in `core.extension`; the next `drush cr` fatals

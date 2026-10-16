@@ -3,9 +3,9 @@ name: drupal-dev-planes
 description: Four-plane discipline for Drupal development agents — versioned knowledge, live site state, verified writes, guarded write tools. Use when building or changing a Drupal site with an agent that has the drupal-dev-planes MCP server configured.
 ---
 
-# The three planes
+# The four planes
 
-Every question in Drupal development belongs to one of three planes. Name the
+Every question in Drupal development belongs to one of four planes. Name the
 plane before acting; the tool responses carry a `plane` field to keep you
 honest.
 
@@ -28,12 +28,13 @@ work around a refusal with `drush_dispatch` — the refusal is the catalog
 doing its job. After a create: `verify_entity` (verdict-first read-back),
 then `verify_page` on the entity's URL.
 
-## The three rules
+## The four rules
 
-1. **Never write config from memory.** Before writing a config key, a service
-   reference, or a hook implementation, ground it in the knowledge plane —
-   `search_drupal` for the API fact and its change records, `get_drupal_document`
-   to verify the citation text. Your training data is not a Drupal version.
+1. **Never write from memory.** Ground API facts in the knowledge plane —
+   `search_drupal` for the fact and its change records, `get_drupal_document`
+   to verify the citation text. Query knowledge at the version `get_site_status`
+   reports for *this* site: read the running version first, then ground the
+   API fact at that version. Your training data is not a Drupal version.
 
 2. **Never assume state.** Read it: `get_site_config` for the current value,
    `list_site_modules` for what is actually enabled, `get_site_status` for the
@@ -41,20 +42,32 @@ then `verify_page` on the entity's URL.
    the site.
 
 3. **Never trust the commit.** An exit code of 0 is not evidence of a working
-   site. After every write through `drush_dispatch`:
+   site. After every write — a guarded write tool *or* `drush_dispatch` — run
+   the paired verification before claiming success:
    - `verify_config` — read back the config object and diff against what you
      intended. Verdict first.
-   - `verify_page` — probe an affected URL. 5xx means dead, the
-     critical-error marker means dead, a 200 under 64 bytes means suspicious.
-   - Only then claim success, citing the verification results.
+   - `verify_entity` — read back a created/changed entity and diff.
+   - `verify_page` — probe an affected URL. Only `alive` means delivered;
+     `server_error`/`error_page`/`http_error`/`suspicious_short`/`content_missing`
+     all mean it did not.
+   - The write tool's `notes` name the exact follow-up. Cite the verification
+     results, not the commit.
+
+4. **Never route around a refusal.** A `refused` result is the catalog
+   preventing a known site-breaking move. Fix the cause (populate the field,
+   resolve the reference, enable the dependency) — do not retry the same call
+   or fall back to `drush_dispatch` to force it.
 
 ## Routing table
 
 | Task | Sequence |
 |---|---|
-| Add/change a config key | `search_drupal` (what it means, which version) → `get_site_config` (current value) → write via `drush_dispatch` → `verify_config` → `verify_page` |
-| Install/enable a module | `list_site_modules` (already enabled?) → `drush_dispatch` → `list_site_modules` (read-back) |
-| Diagnose "change didn't take" | `list_failure_modes` → run the matching detection recipe (usually `verify_page` + `get_site_config`) |
+| Add/change a config key | `search_drupal` (what it means, at the site's version) → `get_site_config` (current value) → write via `drush_dispatch` (no guarded config-write tool yet) → `verify_config` → `verify_page` |
+| Install/enable a module | `install_module` — it scans dependencies and service references first and **refuses** the install-crash class; on success read back with `list_site_modules`. Do not enable via raw `drush_dispatch` |
+| Create a content type / field | `create_content_type` (refuses duplicates) → `get_bundle_fields` read-back; `add_field` (refuses missing bundle / duplicate field) → `get_bundle_fields` read-back |
+| Grant/revoke a permission | `list_roles` (does the role exist?) → `set_permissions` (refuses unknown role/permission) → `list_roles` read-back |
+| Place a block / set a formatter | `place_block` (refuses bad theme/region/id) → `verify_page` with `expected`; `configure_display` performs its own read-back |
+| Diagnose "change didn't take" | `list_failure_modes` → run the matching detection recipe (usually `verify_page` + `get_site_config`); `get_watchdog` for new error-class entries since the write |
 | Create content | `find_content` (does it already exist? idempotency is a read) → `get_bundle_fields` (required fields — you must populate them) → `create_content` → `verify_entity` → `verify_page`. `create_content` refuses unpopulated required fields; the refusal includes each field's type — resolve entity_reference targets with `find_term`. If `find_term` finds no term, the field is unsatisfiable on this site: do NOT retry, surface it to the user |
 | "Where does X live / how does X work?" | `search_drupal` — knowledge plane, no writes |
 | Unfamiliar API/hook/service | `search_drupal` + `get_drupal_document`; check version compatibility and deprecations before writing any code |

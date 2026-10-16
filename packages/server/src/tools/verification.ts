@@ -2,70 +2,14 @@
 // catalog preconditions and verification pairings live with each tool.
 
 import { type McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import type { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { z } from "zod";
-import { callKnowledgeTool, connectKnowledge } from "@drupal-dev-planes/knowledge";
+import { maskSecrets } from "@drupal-dev-planes/state";
+import { canonicalize, diffConfig, probePage } from "@drupal-dev-planes/verify";
+import { diffEntityValues, readbackEntity } from "@drupal-dev-planes/writes";
+import { type ServerConfig } from "../config.js";
 import {
-  checkRoute,
-  findContent,
-  findTerm,
-  getWatchdog,
-  listMenus,
-  listRoles,
-  listViews,
-  maskSecrets,
-  normalizeConfigValue,
-  normalizeModules,
-  normalizeStatus,
-  parseJsonLoose,
-  runDrush,
-  WATCHDOG_SEVERITY_NAMES,
-} from "@drupal-dev-planes/state";
-import {
-  canonicalize,
-  checkClaimSupport,
-  CITATION_RE,
-  diffConfig,
-  loadFailureModes,
-  probePage,
-} from "@drupal-dev-planes/verify";
-import { loadConfig, type ServerConfig } from "../config.js";
-import {
-  createContent,
-  createContentType,
-  deleteContent,
-  diffEntityValues,
-  fetchFieldDefs,
-  missingRequiredValues,
-  nodeTypeExists,
-  readbackEntity,
-  addField,
-  installModuleCheck,
-  isEntityType,
-  isFieldType,
-  normalizeCreateContentTypeResult,
-  normalizeAddFieldResult,
-  placeBlock,
-  readbackDisplayComponent,
-  setDisplayComponent,
-  setPermissions,
-  type EntityType,
-} from "@drupal-dev-planes/writes";
-
-import {
-  envelope,
-  textResult,
-  stateUnavail,
-  READ_ANNOTATIONS,
-  requireExecGate,
-  drushProvenance,
-  drushConfig,
-  asObject,
-  readConfigObject,
-  ENTITY_TYPE_ENUM,
-  parseEntityType,
-  knowledgeCall,
+  envelope, textResult, READ_ANNOTATIONS, drushProvenance, drushConfig, asObject,
+  readConfigObject, ENTITY_TYPE_ENUM, parseEntityType,
 } from "../shared.js";
 
 export function registerVerificationToolRegistrations(server: McpServer, config: ServerConfig): void {
@@ -113,7 +57,7 @@ export function registerVerificationToolRegistrations(server: McpServer, config:
   server.registerTool(
     "verify_page",
     {
-      description: "Verification plane: probe a delivered URL. 5xx = dead, Drupal critical-error marker = dead, 200 under 64 bytes = suspicious. With `expected`, a delivered page MISSING the expected content is treated as not delivered (content assertion).",
+      description: "Verification plane: probe a delivered URL and return a delivery verdict. 5xx = server_error, Drupal critical-error marker = error_page, 4xx = http_error, empty/tiny body = suspicious_short, and (with `expected`) a delivered page missing the expected text = content_missing. Only a fully delivered page is `alive`. Verdict first.",
       inputSchema: {
         url: z.string().url(),
         timeout_ms: z.number().int().positive().max(30_000).optional(),
@@ -123,16 +67,17 @@ export function registerVerificationToolRegistrations(server: McpServer, config:
     },
     async ({ url, timeout_ms, expected }) => {
       const probe = await probePage(url, timeout_ms ?? 10_000, expected);
-      const notes = probe.verdict === "alive"
-        ? (probe.expected && !probe.expected.present
-            ? [`content assertion FAILED: "${probe.expected.needle}" is not on the delivered page — do not claim success; see failure mode silent-partial-delivery.`]
-            : [])
-        : ["page did not deliver — see failure mode critical-error-page. A successful commit is not evidence of a working site."];
+      const notes =
+        probe.verdict === "alive"
+          ? []
+          : probe.verdict === "content_missing"
+            ? [`content assertion FAILED: "${probe.expected?.needle}" is not on the delivered page — do not claim success; see failure mode silent-partial-delivery.`]
+            : probe.verdict === "http_error"
+              ? [`HTTP ${probe.httpStatus} is not a delivered page — a successful commit is not evidence of a working site.`]
+              : ["page did not deliver — see failure mode critical-error-page. A successful commit is not evidence of a working site."];
       return textResult(envelope("verification", "ok", probe, { source: "fetch", url }, notes));
     },
   );
-
-  // ----- State plane: Stage-B typed reads -----
 
   server.registerTool(
     "verify_entity",

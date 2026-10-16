@@ -12,6 +12,7 @@ export {
 } from "./fields.js";
 export {
   createContent,
+  createContentWire,
   deleteContent,
   diffEntityValues,
   fetchFieldDefs,

@@ -50,16 +50,33 @@ test("normalizeRouteCheck verdict on shape", () => {
   assert.equal(hit.matches[0]?.name, "entity.node.canonical");
 });
 
-test("interpretPageProbe: content assertion flags a delivered page missing expected text", () => {
+test("interpretPageProbe: delivered page missing expected text is content_missing, not alive", () => {
   const body = "<html><body><p>" + "x".repeat(120) + "</p></body></html>"; // > 64B floor
   const probe = interpretPageProbe(200, body, "Passports");
-  assert.equal(probe.verdict, "alive");
+  assert.equal(probe.verdict, "content_missing");
   assert.equal(probe.expected?.present, false);
   assert.match(probe.detail, /MISSING/);
   const filler = "x".repeat(120);
   const ok = interpretPageProbe(200, `<html><body><p>US Passports ${filler}</p></body></html>`, "Passports");
+  assert.equal(ok.verdict, "alive");
   assert.equal(ok.expected?.present, true);
   assert.equal(ok.detail, "page delivered");
+});
+
+test("interpretPageProbe: 4xx is http_error, never alive", () => {
+  const big = "<html>" + "not found ".repeat(40) + "</html>";
+  assert.equal(interpretPageProbe(404, big).verdict, "http_error");
+  assert.equal(interpretPageProbe(403, big).verdict, "http_error");
+});
+
+test("interpretPageProbe: empty 200 body is suspicious_short, not alive", () => {
+  assert.equal(interpretPageProbe(200, "").verdict, "suspicious_short");
+});
+
+test("interpretPageProbe: precedence — 500 with missing expected stays server_error", () => {
+  const probe = interpretPageProbe(500, "<html>boom</html>", "Passports");
+  assert.equal(probe.verdict, "server_error");
+  assert.equal(probe.expected?.present, false);
 });
 
 test("content type + field result normalizers keep the honest error list", () => {
