@@ -1,0 +1,200 @@
+{
+  "sweepId": "cs-recipes",
+  "family": "corpus",
+  "target": "recipes",
+  "startedAt": "2026-10-16T07:55:41.023Z",
+  "finishedAt": "2026-10-16T07:59:04.804Z",
+  "fixture": {
+    "site": "corpus",
+    "url": "drupal-dev-mcp index",
+    "drupal": "11.4"
+  },
+  "mutations": [],
+  "queries": [
+    {
+      "type": "kq",
+      "query": "recipe install configuration content apply",
+      "durationMs": 153,
+      "verdict": "pass",
+      "detail": "expected doc rank 1 in top-5 for kq",
+      "bestExpectedRank": 1,
+      "topK": [
+        {
+          "rank": 1,
+          "docId": "doc_Jx5PfTIR7RYd1TTw47kZ2irI",
+          "title": "Shipping default configuration and content as one unit",
+          "repositoryPath": "04-recipes.md",
+          "project": "04-recipes.md",
+          "sourceType": "guidance",
+          "score": 0.925
+        },
+        {
+          "rank": 2,
+          "docId": "doc_7W4xWRn4Vs_A7G-aYrGgH_Pr",
+          "title": "RecipeRunner.php",
+          "repositoryPath": "core/lib/Drupal/Core/Recipe/RecipeRunner.php",
+          "project": "drupal",
+          "sourceType": "core_code",
+          "score": 0.914
+        },
+        {
+          "rank": 3,
+          "docId": "doc_h3NIgBlAVqADIX_xe1qSBb_I",
+          "title": "AGENTS.md - ECA module",
+          "repositoryPath": "AGENTS.md",
+          "project": "eca",
+          "sourceType": "contrib_code",
+          "score": 0.907
+        },
+        {
+          "rank": 4,
+          "docId": "doc_wJfWaIeVsxBmde9kpsCgjaq0",
+          "title": "recipe:apply¶",
+          "repositoryPath": "commands__recipe_apply.md",
+          "project": "commands__recipe_apply.md",
+          "sourceType": "tooling",
+          "score": 0.895
+        },
+        {
+          "rank": 5,
+          "docId": "doc_Qpaky9MvcE3LfR0M9fuscc2p",
+          "title": "ConfigConfigurator.php",
+          "repositoryPath": "core/lib/Drupal/Core/Recipe/ConfigConfigurator.php",
+          "project": "drupal",
+          "sourceType": "core_code",
+          "score": 0.666
+        }
+      ],
+      "forbiddenHits": []
+    },
+    {
+      "type": "question",
+      "query": "In Drupal 10.3+, how can a module or distribution ship default configuration and content so another site can apply it as one unit? Name the system.",
+      "durationMs": 540,
+      "verdict": "pass",
+      "detail": "expected doc rank 1 in top-5 for question",
+      "bestExpectedRank": 1,
+      "topK": [
+        {
+          "rank": 1,
+          "docId": "doc_Jx5PfTIR7RYd1TTw47kZ2irI",
+          "title": "Shipping default configuration and content as one unit",
+          "repositoryPath": "04-recipes.md",
+          "project": "04-recipes.md",
+          "sourceType": "guidance",
+          "score": 0.959
+        },
+        {
+          "rank": 2,
+          "docId": "doc_65yFPCgDH_3q-AAJe9fYx3s9",
+          "title": "Defining and using your own configuration in Drupal",
+          "repositoryPath": "https-www.drupal.org-docs-develop-creating-modules-defining-and-using-your-own-configuration-in-drupal.md",
+          "project": "https-www.drupal.org-docs-develop-creating-modules-defining-and-using-your-own-configuration-in-drupal.md",
+          "sourceType": "official_guide",
+          "score": 0.708
+        },
+        {
+          "rank": 3,
+          "docId": "doc_Z9DfDUN4aYKxvCyupn49pg0a",
+          "title": "Include default configuration in your Drupal module",
+          "repositoryPath": "https-www.drupal.org-docs-develop-creating-modules-include-default-configuration-in-your-drupal-module.md",
+          "project": "https-www.drupal.org-docs-develop-creating-modules-include-default-configuration-in-your-drupal-module.md",
+          "sourceType": "official_guide",
+          "score": 0.583
+        },
+        {
+          "rank": 4,
+          "docId": "doc_bPW8jYW62ehSyZz_pycmTUt3",
+          "title": "Understanding Orchestration",
+          "repositoryPath": "docs/agents/orchestration.md",
+          "project": "ai",
+          "sourceType": "contrib_code",
+          "score": 0.414
+        },
+        {
+          "rank": 5,
+          "docId": "doc_vgxHibUwHT5HaV1ucf1w_8kq",
+          "title": "Reusable front-end components with colocated assets",
+          "repositoryPath": "03-reusable-frontend-components.md",
+          "project": "03-reusable-frontend-components.md",
+          "sourceType": "guidance",
+          "score": 0.337
+        }
+      ],
+      "forbiddenHits": []
+    }
+  ],
+  "retrieval": {
+    "verdict": "pass",
+    "detail": "kq: expected doc rank 1 in top-5 for kq; question: expected doc rank 1 in top-5 for question"
+  },
+  "locatedDocIds": [
+    "doc_Jx5PfTIR7RYd1TTw47kZ2irI",
+    "doc_7W4xWRn4Vs_A7G-aYrGgH_Pr",
+    "doc_h3NIgBlAVqADIX_xe1qSBb_I",
+    "doc_wJfWaIeVsxBmde9kpsCgjaq0",
+    "doc_Qpaky9MvcE3LfR0M9fuscc2p",
+    "doc_65yFPCgDH_3q-AAJe9fYx3s9",
+    "doc_Z9DfDUN4aYKxvCyupn49pg0a",
+    "doc_bPW8jYW62ehSyZz_pycmTUt3",
+    "doc_vgxHibUwHT5HaV1ucf1w_8kq"
+  ],
+  "ledgerProposals": [
+    {
+      "issueId": "concept-bridge-recent-era-systems",
+      "type": "locatedDocIds",
+      "docIds": [
+        "doc_Jx5PfTIR7RYd1TTw47kZ2irI",
+        "doc_7W4xWRn4Vs_A7G-aYrGgH_Pr",
+        "doc_h3NIgBlAVqADIX_xe1qSBb_I",
+        "doc_wJfWaIeVsxBmde9kpsCgjaq0",
+        "doc_Qpaky9MvcE3LfR0M9fuscc2p",
+        "doc_65yFPCgDH_3q-AAJe9fYx3s9",
+        "doc_Z9DfDUN4aYKxvCyupn49pg0a",
+        "doc_bPW8jYW62ehSyZz_pycmTUt3",
+        "doc_vgxHibUwHT5HaV1ucf1w_8kq"
+      ]
+    },
+    {
+      "issueId": "concept-bridge-recent-era-systems",
+      "type": "observation",
+      "text": "B1 retrieval 2026-10-16: kq=pass (expected doc rank 1 in top-5 for kq); question=pass (expected doc rank 1 in top-5 for question)"
+    }
+  ],
+  "answerability": [
+    {
+      "model": "llama31-8b-16k",
+      "depth": "ask",
+      "expertStatus": "answered",
+      "durationMs": 19401,
+      "verdict": "inconclusive",
+      "markerScoring": {
+        "failHits": [],
+        "passCount": 1
+      },
+      "claimSupport": {
+        "verdict": "uncited",
+        "counts": {
+          "supported": 0,
+          "weak": 0,
+          "unsupported": 0,
+          "uncited": 6,
+          "unresolved": 0
+        },
+        "groundingDensity": 0,
+        "versionFlags": [],
+        "unresolvedCitations": 0,
+        "citedIds": []
+      },
+      "flagged": true,
+      "answer": "**Objective:** Design a Drupal module or distribution to ship default configuration and content as a single unit to other sites.\n\nThe system to achieve this is called **Recipes**, available in Drupal 10.3 and later.\n\nTo use Recipes, you need to create a directory with a `recipe.yml` file declaring the configuration, content, and module/theme dependencies to apply.\n\nA simple example of a recipe.yml file might look like this:\n```yaml\nname: My Feature\nversion: 1.0\ndescription: My feature description\ndependencies:\n  - module: Drupal/core\n    version: \"10.3\"\nfeatures:\n  - feature: myFeature\n    enabled: true\ncontent:\n  - node: myNode\n    title: My Node Title\n    body: My node body\n```\nVersion notes: The above Recipes system is available in Drupal 10.3 and later. The information is based on the provided evidence and is subject to change based on new updates.",
+      "usage": null,
+      "estimateNotAvailable": true
+    }
+  ],
+  "verdict": "pass",
+  "notes": [],
+  "model": [
+    "llama31-8b-16k"
+  ]
+}

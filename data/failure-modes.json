@@ -55,8 +55,8 @@
       "symptom": "Public page returns a very small body or an error screen under a 200/3xx, or a 5xx with a large HTML wrapper.",
       "rootCause": "Drupal's critical-error handling and proxy layers can produce non-5xx responses for dead pages.",
       "detection": "verify_page treats 5xx as dead, matches the critical-error marker, and flags 200s under 64 bytes as suspicious_short.",
-      "evidenceStatus": "claimed",
-      "citation": "mosaic-headless: 'WordPress's critical error screen is 2,697 bytes and larger than any naive healthy-page floor'"
+      "evidenceStatus": "measured",
+      "citation": "usagov-2021 ddev sweep 2026-10-16: induced sitewide 500 (global-styling css-category bad patch) -> 200-response replaced by 500/2527B; verify_page flagged server_error through the planes. Thresholds (5xx=dead, marker=dead, <64B-200=suspicious) re-measured. see sweep/records/2026-10-16-fm-critical-error-page.json"
     },
     {
       "id": "unpopulated-field-fatal",
@@ -66,7 +66,7 @@
       "rootCause": "Preprocess hooks / event subscribers do field_page_type->referencedEntities()[0]->getName() without an empty check; null propagates into the render pipeline sitewide.",
       "detection": "verify_page on the new URL immediately after creation: server_error at 200-commit. Reproduced 3x in usagov_benefit_category_search (hook + subscriber).",
       "evidenceStatus": "measured",
-      "citation": "usagov-2021 ddev bring-up 2026-09-26: nodes nids 11-15, verify_page server_error 2090-2229B, watchdog Call to a member function getName() on null"
+      "citation": "usagov-2021 ddev bring-up 2026-09-26: nodes nids 11-15, verify_page server_error 2090-2229B, watchdog Call to a member function getName() on null. Re-proven mechanically 2026-10-16 (sweep/records/2026-10-16-fm-unpopulated-field-fatal.json, unpatch mode SWEEP_FM_UNPATCH=1). Fixture drift noted 2026-10-16: field_page_type is now REQUIRED on basic_page and content_moderation drafts fresh nodes (anonymous gets 403), so the reproduction trigger is now render-path-shaped — any published basic_page with an empty field (all five rebuilt pages qualify) fatals sitewide under the unguarded code; same symptom, 500/2090B reproduced exactly."
     },
     {
       "id": "library-css-category-assertion",
@@ -86,7 +86,7 @@
       "rootCause": "ModuleInstaller rebuilds the kernel after EACH module enable; nothing declares cross-module dependencies, so subscribers compile before the module providing their event class is loadable.",
       "detection": "Reproduced 4x from clean DBs. Guard getSubscribedEvents with class_exists; the events register correctly after the full batch.",
       "evidenceStatus": "measured",
-      "citation": "usagov-2021 ddev bring-up 2026-09-26: 5 files patched, install then completed"
+      "citation": "usagov-2021 ddev bring-up 2026-09-26: install crashed mid-config-import; 5 local patches then let it complete. Mechanically re-proven 2026-10-16 on the usagov-sweep-scratch scratch project (sweep/records/2026-10-16-fm-install-order-subscriber-crash.json): fresh site:install minimal --existing-config crashes at container compile — The service Drupal/usagov_benefit_finder_api/Controller/LifeEventController has a dependency on a non-existent service file.repository. Detect recipe (get_site_status + verify_page) caught the half-installed state through the planes."
     },
     {
       "id": "half-install-state",
@@ -96,7 +96,7 @@
       "rootCause": "ModuleInstaller writes module.<name> to core.extension BEFORE the container rebuild, so a compile failure leaves the module enabled but never installed.",
       "detection": "Direct DB repair: remove the module row from the config table core.extension blob (scripts/agent-planes/repair-core-extension.php).",
       "evidenceStatus": "measured",
-      "citation": "usagov-2021 ddev bring-up 2026-09-26: repaired via PDO, bootstrap restored"
+      "citation": "usagov-2021 ddev bring-up 2026-09-26: repaired via PDO repair script, bootstrap restored. Mechanically re-proven 2026-10-16 (sweep/records/2026-10-16-fm-half-install-state.json) with a stub module whose service references a non-existent dependency: pm:enable fatals at container compile, the repair recipe (repair-core-extension.php via ddev exec php — NOT drush php:script, which cannot bootstrap a bricked site) unbricks, verified by DEEP recovery check (get_site_status AND list_site_modules; get_site_status alone reported recovered on a broken module handler). Recipe flavor note: the repair targets modules half-committed in core.extension; the config-import crash variant leaves a bare-skeleton core.extension and needs dependency-safe re-provisioning instead."
     },
     {
       "id": "undeclared-service-dependency",
@@ -106,7 +106,7 @@
       "rootCause": "usagov_benefit_finder_api hardcodes @file.repository; the minimal profile does not enable file, and no dependency is declared. GSA never hits it because they import a full DB.",
       "detection": "Drupal::hasService(file.repository) === false on a clean minimal install; enabling file first resolves it.",
       "evidenceStatus": "measured",
-      "citation": "usagov-2021 ddev bring-up 2026-09-26: clean minimal install, hasService false, enable-order fix"
+      "citation": "usagov-2021 ddev bring-up 2026-09-26: clean minimal install, hasService false, enable-order fix. Mechanically re-proven 2026-10-16 (sweep/records/2026-10-16-fm-undeclared-service-dependency.json): pm:enable of a module with an undeclared service dependency fatals at container compile naming the missing service, and the enable HALF-COMMITS — the module remains in core.extension after the failed command, and the next drush cr fatals naming the missing service (the hazard the detection recipe checks). Same root cause as the install-order crash."
     }
   ]
 }

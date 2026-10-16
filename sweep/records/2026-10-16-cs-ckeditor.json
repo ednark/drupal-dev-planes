@@ -1,0 +1,179 @@
+{
+  "sweepId": "cs-ckeditor",
+  "family": "corpus",
+  "target": "ckeditor",
+  "startedAt": "2026-10-16T07:55:41.716Z",
+  "finishedAt": "2026-10-16T07:59:04.804Z",
+  "fixture": {
+    "site": "corpus",
+    "url": "drupal-dev-mcp index",
+    "drupal": "11.4"
+  },
+  "mutations": [],
+  "queries": [
+    {
+      "type": "kq",
+      "query": "CKEditor 5 default text editor replacement",
+      "durationMs": 172,
+      "verdict": "pass",
+      "detail": "expected doc rank 1 in top-5 for kq",
+      "bestExpectedRank": 1,
+      "topK": [
+        {
+          "rank": 1,
+          "docId": "doc_cnN1o3BwgPQrTuStAAYpXRzo",
+          "title": "ckeditor5.module",
+          "repositoryPath": "core/modules/ckeditor5/ckeditor5.module",
+          "project": "drupal",
+          "sourceType": "core_code",
+          "score": 0.696
+        },
+        {
+          "rank": 2,
+          "docId": "doc__MkPuyXlzKoC0ohTYvVFCVn6",
+          "title": "Ckeditor5Hooks.php",
+          "repositoryPath": "core/modules/ckeditor5/src/Hook/Ckeditor5Hooks.php",
+          "project": "drupal",
+          "sourceType": "core_code",
+          "score": 0.586
+        },
+        {
+          "rank": 3,
+          "docId": "doc_TJWV8MmNxqwTSh_Phj61CdtI",
+          "title": "CKEditor5.php",
+          "repositoryPath": "core/modules/ckeditor5/src/Plugin/Editor/CKEditor5.php",
+          "project": "drupal",
+          "sourceType": "core_code",
+          "score": 0.586
+        },
+        {
+          "rank": 4,
+          "docId": "doc_oVx7Uth0rQqjfwAJ7AfSDeFv",
+          "title": "SmartDefaultSettings.php",
+          "repositoryPath": "core/modules/ckeditor5/src/SmartDefaultSettings.php",
+          "project": "drupal",
+          "sourceType": "core_code",
+          "score": 0.584
+        },
+        {
+          "rank": 5,
+          "docId": "doc_zJra0X4bBgPMU-Ie4zZsbv3L",
+          "title": "EnabledConfigurablePluginsConstraintValidator.php",
+          "repositoryPath": "core/modules/ckeditor5/src/Plugin/Validation/Constraint/EnabledConfigurablePluginsConstraintValidator.php",
+          "project": "drupal",
+          "sourceType": "core_code",
+          "score": 0.583
+        }
+      ],
+      "forbiddenHits": []
+    },
+    {
+      "type": "question",
+      "query": "Which text editor is Drupal 10's default, and what replaced the editor that Drupal 9 shipped with?",
+      "durationMs": 586,
+      "verdict": "pass",
+      "detail": "expected doc rank 2 in top-5 for question",
+      "bestExpectedRank": 2,
+      "topK": [
+        {
+          "rank": 1,
+          "docId": "doc_uEM_4rKlRd-SI3QeP7Gvf-ht",
+          "title": "Linkit",
+          "repositoryPath": "linkit.md",
+          "project": "linkit.md",
+          "sourceType": "contrib_docs",
+          "score": 0.657
+        },
+        {
+          "rank": 2,
+          "docId": "doc_dMLt2vlBGrun_ft9badv7AQk",
+          "title": "Developing for AI CKEditor",
+          "repositoryPath": "docs/developers/ck_editor_plugin.md",
+          "project": "ai",
+          "sourceType": "contrib_code",
+          "score": 0.655
+        },
+        {
+          "rank": 3,
+          "docId": "doc_oVx7Uth0rQqjfwAJ7AfSDeFv",
+          "title": "SmartDefaultSettings.php",
+          "repositoryPath": "core/modules/ckeditor5/src/SmartDefaultSettings.php",
+          "project": "drupal",
+          "sourceType": "core_code",
+          "score": 0.593
+        },
+        {
+          "rank": 4,
+          "docId": "doc_BTZ0UXXideH-PSSgdEL1DR6z",
+          "title": "EditorHooks.php",
+          "repositoryPath": "core/modules/editor/src/Hook/EditorHooks.php",
+          "project": "drupal",
+          "sourceType": "core_code",
+          "score": 0.579
+        },
+        {
+          "rank": 5,
+          "docId": "doc_grLpqhAPv0cA6rzC51nxHC1D",
+          "title": "WebformAdminConfigElementsForm.php",
+          "repositoryPath": "src/Form/AdminConfig/WebformAdminConfigElementsForm.php",
+          "project": "webform",
+          "sourceType": "contrib_code",
+          "score": 0.577
+        }
+      ],
+      "forbiddenHits": []
+    }
+  ],
+  "retrieval": {
+    "verdict": "pass",
+    "detail": "kq: expected doc rank 1 in top-5 for kq; question: expected doc rank 2 in top-5 for question"
+  },
+  "locatedDocIds": [
+    "doc_cnN1o3BwgPQrTuStAAYpXRzo",
+    "doc__MkPuyXlzKoC0ohTYvVFCVn6",
+    "doc_TJWV8MmNxqwTSh_Phj61CdtI",
+    "doc_oVx7Uth0rQqjfwAJ7AfSDeFv",
+    "doc_zJra0X4bBgPMU-Ie4zZsbv3L",
+    "doc_uEM_4rKlRd-SI3QeP7Gvf-ht",
+    "doc_dMLt2vlBGrun_ft9badv7AQk",
+    "doc_BTZ0UXXideH-PSSgdEL1DR6z",
+    "doc_grLpqhAPv0cA6rzC51nxHC1D"
+  ],
+  "ledgerProposals": [],
+  "answerability": [
+    {
+      "model": "llama31-8b-16k",
+      "depth": "ask",
+      "expertStatus": "answered",
+      "durationMs": 15332,
+      "verdict": "inconclusive",
+      "markerScoring": {
+        "failHits": [],
+        "passCount": 0
+      },
+      "claimSupport": {
+        "verdict": "uncited",
+        "counts": {
+          "supported": 0,
+          "weak": 0,
+          "unsupported": 0,
+          "uncited": 8,
+          "unresolved": 0
+        },
+        "groundingDensity": 0,
+        "versionFlags": [],
+        "unresolvedCitations": 0,
+        "citedIds": []
+      },
+      "flagged": true,
+      "answer": "Objective: Determine the default text editor shipped with Drupal 10 and the editor that was used in Drupal 9.\n\nBased on the provided evidence, the default text editor in Drupal 10 is not explicitly mentioned. However, the editor configuration is defined in the `editor.schema.yml` file. \n\nThe `ConfigEntityType: editor` (C) and the related classes suggest that Drupal's editor functionality is used.\n\nVersion notes:\n* This answer refers to Drupal 11.4, but there's no clear evidence directly pointing to Drupal 10.\n* Note: The question seems to assume Drupal 10, but the provided evidence does not explicitly mention it. To provide a more accurate answer, the evidence should be updated to reflect the Drupal 10 changes directly. \n\nNon-goals: This answer does not consider which text editor is recommended or suitable for a site, as that would be a subjective judgment.",
+      "usage": null,
+      "estimateNotAvailable": true
+    }
+  ],
+  "verdict": "pass",
+  "notes": [],
+  "model": [
+    "llama31-8b-16k"
+  ]
+}

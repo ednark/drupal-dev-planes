@@ -1,0 +1,179 @@
+{
+  "sweepId": "cs-message",
+  "family": "corpus",
+  "target": "message",
+  "startedAt": "2026-10-16T08:00:51.163Z",
+  "finishedAt": "2026-10-16T08:01:10.095Z",
+  "fixture": {
+    "site": "corpus",
+    "url": "drupal-dev-mcp index",
+    "drupal": "10.6"
+  },
+  "mutations": [],
+  "queries": [
+    {
+      "type": "kq",
+      "query": "messenger service addStatus status message",
+      "durationMs": 1642,
+      "verdict": "pass",
+      "detail": "expected doc rank 1 in top-5 for kq",
+      "bestExpectedRank": 1,
+      "topK": [
+        {
+          "rank": 1,
+          "docId": "doc_0Gs0s9c_HYrXI8HK0z2mxMAC",
+          "title": "Showing a status message, notice, or warning to the user",
+          "repositoryPath": "01-status-messages.md",
+          "project": "01-status-messages.md",
+          "sourceType": "guidance",
+          "score": 0.917
+        },
+        {
+          "rank": 2,
+          "docId": "doc_EnAuxsFBWTzG9MlDtcbm9g_o",
+          "title": "Messenger.php",
+          "repositoryPath": "core/lib/Drupal/Core/Messenger/Messenger.php",
+          "project": "drupal",
+          "sourceType": "core_code",
+          "score": 0.911
+        },
+        {
+          "rank": 3,
+          "docId": "doc_Sp77Qk6itpotIXtiXlms5uuM",
+          "title": "JobController.php",
+          "repositoryPath": "src/Controller/JobController.php",
+          "project": "ultimate_cron",
+          "sourceType": "contrib_code",
+          "score": 0.909
+        },
+        {
+          "rank": 4,
+          "docId": "doc_hUrswhv8423tL0-f9MNMAuFW",
+          "title": "RegisterForm.php",
+          "repositoryPath": "core/modules/user/src/RegisterForm.php",
+          "project": "drupal",
+          "sourceType": "core_code",
+          "score": 0.905
+        },
+        {
+          "rank": 5,
+          "docId": "doc_Nk8sy24KOUQqslGmV_ofWeDQ",
+          "title": "ThemeExperimentalConfirmForm.php",
+          "repositoryPath": "core/modules/system/src/Form/ThemeExperimentalConfirmForm.php",
+          "project": "drupal",
+          "sourceType": "core_code",
+          "score": 0.895
+        }
+      ],
+      "forbiddenHits": []
+    },
+    {
+      "type": "question",
+      "query": "In Drupal 10 custom module code, how do I show a status message to the user? Show code.",
+      "durationMs": 923,
+      "verdict": "pass",
+      "detail": "expected doc rank 1 in top-5 for question",
+      "bestExpectedRank": 1,
+      "topK": [
+        {
+          "rank": 1,
+          "docId": "doc_0Gs0s9c_HYrXI8HK0z2mxMAC",
+          "title": "Showing a status message, notice, or warning to the user",
+          "repositoryPath": "01-status-messages.md",
+          "project": "01-status-messages.md",
+          "sourceType": "guidance",
+          "score": 0.95
+        },
+        {
+          "rank": 2,
+          "docId": "doc_KN21ddpdN4_c1q8R1YKV8hDr",
+          "title": "Subscribe to and dispatch events",
+          "repositoryPath": "https-www.drupal.org-docs-develop-creating-modules-subscribe-to-and-dispatch-events.md",
+          "project": "https-www.drupal.org-docs-develop-creating-modules-subscribe-to-and-dispatch-events.md",
+          "sourceType": "official_guide",
+          "score": 0.909
+        },
+        {
+          "rank": 3,
+          "docId": "doc_w-WO7EiL2ktB5LRRj5gETsae",
+          "title": "Subscribe to and dispatch events",
+          "repositoryPath": "creating-custom-modules-subscribe-to-and-dispatch-events-guide.md",
+          "project": "creating-custom-modules-subscribe-to-and-dispatch-events-guide.md",
+          "sourceType": "official_guide",
+          "score": 0.79
+        },
+        {
+          "rank": 4,
+          "docId": "doc_OYyNUtcZdglMJTOmltfhDBYo",
+          "title": "Subscribe to and dispatch events",
+          "repositoryPath": "drupal-org-docs/docs-develop-creating-modules-subscribe-to-and-dispatch-events.md",
+          "project": "drupal-org-docs",
+          "sourceType": "tutorial",
+          "score": 0.79
+        },
+        {
+          "rank": 5,
+          "docId": "doc_1oiaTIAF5Ld5oVQ3zspWkUyV",
+          "title": "voters.rst",
+          "repositoryPath": "security/voters.rst",
+          "project": "security",
+          "sourceType": "symfony",
+          "score": 0.768
+        }
+      ],
+      "forbiddenHits": []
+    }
+  ],
+  "retrieval": {
+    "verdict": "pass",
+    "detail": "kq: expected doc rank 1 in top-5 for kq; question: expected doc rank 1 in top-5 for question"
+  },
+  "locatedDocIds": [
+    "doc_0Gs0s9c_HYrXI8HK0z2mxMAC",
+    "doc_EnAuxsFBWTzG9MlDtcbm9g_o",
+    "doc_Sp77Qk6itpotIXtiXlms5uuM",
+    "doc_hUrswhv8423tL0-f9MNMAuFW",
+    "doc_Nk8sy24KOUQqslGmV_ofWeDQ",
+    "doc_KN21ddpdN4_c1q8R1YKV8hDr",
+    "doc_w-WO7EiL2ktB5LRRj5gETsae",
+    "doc_OYyNUtcZdglMJTOmltfhDBYo",
+    "doc_1oiaTIAF5Ld5oVQ3zspWkUyV"
+  ],
+  "ledgerProposals": [],
+  "answerability": [
+    {
+      "model": "llama31-8b-16k",
+      "depth": "ask",
+      "expertStatus": "answered",
+      "durationMs": 16166,
+      "verdict": "inconclusive",
+      "markerScoring": {
+        "failHits": [],
+        "passCount": 1
+      },
+      "claimSupport": {
+        "verdict": "uncited",
+        "counts": {
+          "supported": 0,
+          "weak": 0,
+          "unsupported": 0,
+          "uncited": 11,
+          "unresolved": 0
+        },
+        "groundingDensity": 0,
+        "versionFlags": [],
+        "unresolvedCitations": 0,
+        "citedIds": []
+      },
+      "flagged": true,
+      "answer": "Objective: Show a status message to the user in Drupal 10 custom module code.\n\nTo show a status message to the user in Drupal 10 custom module code, you can use the Messenger service. Since Drupal 8, user-facing messages are set through the Messenger service. In Drupal 10/11, there is no procedural function anymore, and the Drupal 7-era drupal_set_message() was removed and is a legacy-API trap.\n\nHere is an example code snippet:\n```php\nuse Drupal\\Core\\Messenger\\MessengerInterface;\n\n$messenger = \\Drupal::service('messenger');\n$messenger->addStatus('My custom status message');\n```\nVersion notes: This solution holds for Drupal 10. If you are using an older version of Drupal, you may need to use the drupal_set_message() function, but be aware that it is deprecated.\n\nThis code snippet uses the MessengerInterface to add a status message to the user. The MessengerInterface is a service that can be injected into your custom module code, and it provides a way to display status messages, notices, and warnings to the user.\n\nNote: This solution assumes that you have the `messenger` service enabled in your Drupal 10 installation. If you don't have it enabled, you can enable it by going to the \"Services\" page in the Drupal admin interface and checking the \"messenger\" service.",
+      "usage": null,
+      "estimateNotAvailable": true
+    }
+  ],
+  "verdict": "pass",
+  "notes": [],
+  "model": [
+    "llama31-8b-16k"
+  ]
+}

@@ -1,0 +1,14 @@
+diff --git a/web/themes/custom/usagov/usagov.libraries.yml b/web/themes/custom/usagov/usagov.libraries.yml
+index c8d3ff6..ea42278 100644
+--- a/web/themes/custom/usagov/usagov.libraries.yml
++++ b/web/themes/custom/usagov/usagov.libraries.yml
+@@ -1,8 +1,7 @@
+ global-styling:
+   version: 1.0
+   css:
+-    theme:
+-      css/styles.css: {}
++    css/styles.css: {}
+   js:
+     scripts/uswds.min.js: {}
+     scripts/uswds-init.min.js: {}

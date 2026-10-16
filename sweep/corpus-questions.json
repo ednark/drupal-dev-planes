@@ -1,0 +1,207 @@
+{
+  "version": "0.1.0",
+  "note": "Family B1 corpus retrieval fixtures (sweep-harness-plan \u00a75): deterministic, model-free retrieval checks. Each fixture asserts expected documents surface in top-k for BOTH the curated keyword query (kq) and the raw question; forbidden documents are recorded per the fixture's forbiddenPolicy. sdc + recipes are the concept-bridge pair (ledger: concept-bridge-recent-era-systems) \u2014 their raw questions deliberately do NOT name the system, so the question query measures the bridge.",
+  "topK": 5,
+  "fixtures": [
+    {
+      "id": "route",
+      "tier": 1,
+      "question": "In Drupal 10, how do I register a route for the path /hello that returns rendered output from a custom module? Show code.",
+      "kq": "custom module route path controller routing yaml",
+      "drupalVersion": "10.6",
+      "expectedDocs": {
+        "anyOf": [
+          {
+            "pathSubstr": ".routing.yml"
+          },
+          {
+            "titleSubstr": "routing"
+          }
+        ]
+      },
+      "forbiddenPolicy": "record-only",
+      "forbiddenDocs": [],
+      "ledgerIssue": null
+    },
+    {
+      "id": "message",
+      "tier": 1,
+      "question": "In Drupal 10 custom module code, how do I show a status message to the user? Show code.",
+      "kq": "messenger service addStatus status message",
+      "drupalVersion": "10.6",
+      "expectedDocs": {
+        "anyOf": [
+          {
+            "titleSubstr": "messenger"
+          },
+          {
+            "pathSubstr": "Messenger"
+          },
+          {
+            "pathSubstr": "status-messages"
+          },
+          {
+            "titleSubstr": "status message"
+          }
+        ]
+      },
+      "forbiddenPolicy": "record-only",
+      "forbiddenDocs": [],
+      "ledgerIssue": null
+    },
+    {
+      "id": "dbquery",
+      "tier": 1,
+      "question": "In Drupal 10, how do I run a SELECT query against the site database from a custom module? Show code.",
+      "kq": "database connection select query service injection",
+      "drupalVersion": "10.6",
+      "expectedDocs": {
+        "anyOf": [
+          {
+            "titleSubstr": "database"
+          },
+          {
+            "pathSubstr": "database"
+          }
+        ]
+      },
+      "forbiddenPolicy": "record-only",
+      "forbiddenDocs": [
+        {
+          "titleSubstr": "db_query"
+        }
+      ]
+    },
+    {
+      "id": "currentuser",
+      "tier": 1,
+      "question": "In Drupal 10 custom module code, how do I get the currently logged-in user account? Show code.",
+      "kq": "current user account service getCurrentAccount",
+      "drupalVersion": "10.6",
+      "expectedDocs": {
+        "anyOf": [
+          {
+            "titleSubstr": "current user"
+          },
+          {
+            "pathSubstr": "CurrentUser"
+          },
+          {
+            "titleSubstr": "current_user"
+          },
+          {
+            "pathSubstr": "current-user"
+          },
+          {
+            "titleSubstr": "logged-in user"
+          }
+        ]
+      },
+      "forbiddenPolicy": "record-only",
+      "forbiddenDocs": [],
+      "ledgerIssue": null
+    },
+    {
+      "id": "sdc",
+      "tier": 2,
+      "question": "In Drupal 10.3+, what is the recommended way to create a reusable front-end component with its template, CSS and JS colocated in one directory? Name the system.",
+      "kq": "single directory components SDC component theme",
+      "drupalVersion": "11.4",
+      "expectedDocs": {
+        "anyOf": [
+          {
+            "titleSubstr": "single-directory"
+          },
+          {
+            "titleSubstr": "single directory"
+          },
+          {
+            "pathSubstr": "sdc"
+          },
+          {
+            "pathSubstr": "frontend-components"
+          },
+          {
+            "titleSubstr": "reusable front-end"
+          }
+        ]
+      },
+      "forbiddenPolicy": "record-only",
+      "forbiddenDocs": [],
+      "ledgerIssue": "concept-bridge-recent-era-systems"
+    },
+    {
+      "id": "recipes",
+      "tier": 2,
+      "question": "In Drupal 10.3+, how can a module or distribution ship default configuration and content so another site can apply it as one unit? Name the system.",
+      "kq": "recipe install configuration content apply",
+      "drupalVersion": "11.4",
+      "expectedDocs": {
+        "anyOf": [
+          {
+            "pathSubstr": "RecipeRunner"
+          },
+          {
+            "titleSubstr": "recipe"
+          },
+          {
+            "pathSubstr": "default-configuration-and-content"
+          },
+          {
+            "titleSubstr": "default configuration and content"
+          }
+        ]
+      },
+      "forbiddenPolicy": "record-only",
+      "forbiddenDocs": [],
+      "ledgerIssue": "concept-bridge-recent-era-systems"
+    },
+    {
+      "id": "ckeditor",
+      "tier": 2,
+      "question": "Which text editor is Drupal 10's default, and what replaced the editor that Drupal 9 shipped with?",
+      "kq": "CKEditor 5 default text editor replacement",
+      "drupalVersion": "11.4",
+      "expectedDocs": {
+        "anyOf": [
+          {
+            "titleSubstr": "CKEditor"
+          }
+        ]
+      },
+      "forbiddenPolicy": "record-only",
+      "forbiddenDocs": [],
+      "ledgerIssue": null
+    },
+    {
+      "id": "phpfloor",
+      "tier": 2,
+      "question": "What is the minimum PHP version Drupal 11 requires?",
+      "kq": "Drupal 11 requirements PHP 8.3 composer.json",
+      "drupalVersion": "11.4",
+      "groundTruth": {
+        "assert": "8.3",
+        "forbid": "8.2-as-minimum"
+      },
+      "expectedDocs": {
+        "anyOf": [
+          {
+            "titleSubstr": "composer.json",
+            "pathSubstr": "core/"
+          },
+          {
+            "titleSubstr": "SystemRequirements"
+          }
+        ]
+      },
+      "forbiddenPolicy": "must-not-outrank",
+      "forbiddenDocs": [
+        {
+          "titleSubstr": "composer.json",
+          "projectNot": "drupal"
+        }
+      ],
+      "ledgerIssue": "php-floor-drupal-11-contrib-proximity"
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+services:
+  sweep_stub_dep.broken:
+    class: Drupal\sweep_stub_dep\SweepStubService
+    # The measured failure: a service argument referencing a service that
+    # does not exist, with no module dependency declared. Container compile
+    # fatals on pm:enable — the half-install / undeclared-dependency class.
+    arguments: ['@sweep.missing_service']

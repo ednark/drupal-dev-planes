@@ -1,0 +1,32 @@
+{
+  "sweepId": "fm-library-css-category-assertion",
+  "family": "failure-mode",
+  "target": "library-css-category-assertion",
+  "startedAt": "2026-10-16T06:09:48.213Z",
+  "finishedAt": "2026-10-16T06:09:50.434Z",
+  "fixture": {
+    "site": "usagov2021",
+    "url": "https://usagov2021.ddev.site",
+    "drupal": "10.6",
+    "scratch": false
+  },
+  "mutations": [
+    {
+      "kind": "file-edit",
+      "detail": "git apply carousel css-category bad patch (induced sitewide 500)",
+      "reverted": true
+    }
+  ],
+  "reproduce": {
+    "verdict": "pass",
+    "detail": "after bad patch + cr (cr exit=0 stderr= [success] Cache rebuild complete.\n), front page probe -> ok/server_error (citation: 500/3745B before fix)"
+  },
+  "detect": {
+    "verdict": "pass",
+    "tool": "verify_page",
+    "detail": "detection recipe on the patched front page -> verdict=server_error"
+  },
+  "verdict": "pass",
+  "notes": [],
+  "model": null
+}

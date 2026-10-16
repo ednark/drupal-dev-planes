@@ -1,0 +1,180 @@
+{
+  "sweepId": "cs-route",
+  "family": "corpus",
+  "target": "route",
+  "startedAt": "2026-10-16T07:55:37.180Z",
+  "finishedAt": "2026-10-16T07:59:04.802Z",
+  "fixture": {
+    "site": "corpus",
+    "url": "drupal-dev-mcp index",
+    "drupal": "10.6"
+  },
+  "mutations": [],
+  "queries": [
+    {
+      "type": "kq",
+      "query": "custom module route path controller routing yaml",
+      "durationMs": 344,
+      "verdict": "pass",
+      "detail": "expected doc rank 4 in top-5 for kq",
+      "bestExpectedRank": 4,
+      "topK": [
+        {
+          "rank": 1,
+          "docId": "doc_MpPzVI1ykyN8HEaAxVkL6zAD",
+          "title": "Routes & Controllers",
+          "repositoryPath": "skills/drupal-at-your-fingertips/references/routes.md",
+          "project": "skills",
+          "sourceType": "skill",
+          "score": 0.936
+        },
+        {
+          "rank": 2,
+          "docId": "doc_jZAJI_W3hc8Ai_Ny8qn8AGZz",
+          "title": "Drupal API Endpoint Patterns",
+          "repositoryPath": "skills/drupal-api-endpoints/SKILL.md",
+          "project": "skills",
+          "sourceType": "skill",
+          "score": 0.911
+        },
+        {
+          "rank": 3,
+          "docId": "doc_9dhbvf3OECTk6ewFfVEpFCgJ",
+          "title": "custom_route_loader.rst",
+          "repositoryPath": "routing/custom_route_loader.rst",
+          "project": "routing",
+          "sourceType": "symfony",
+          "score": 0.762
+        },
+        {
+          "rank": 4,
+          "docId": "doc_Okst07SN6rjDtJmS3IOHHxLY",
+          "title": "routing.rst",
+          "repositoryPath": "routing.rst",
+          "project": "routing.rst",
+          "sourceType": "symfony",
+          "score": 0.756
+        },
+        {
+          "rank": 5,
+          "docId": "doc_XbSawsdHm2Ntc9gEYOtx1H2J",
+          "title": "webform_node.routing.yml",
+          "repositoryPath": "modules/webform_node/webform_node.routing.yml",
+          "project": "webform",
+          "sourceType": "contrib_code",
+          "score": 0.752
+        }
+      ],
+      "forbiddenHits": []
+    },
+    {
+      "type": "question",
+      "query": "In Drupal 10, how do I register a route for the path /hello that returns rendered output from a custom module? Show code.",
+      "durationMs": 579,
+      "verdict": "pass",
+      "detail": "expected doc rank 2 in top-5 for question",
+      "bestExpectedRank": 2,
+      "topK": [
+        {
+          "rank": 1,
+          "docId": "doc_JoLjxMQmIBbLit7QnkjqVkQw",
+          "title": "Introductory Drupal routes and controllers example",
+          "repositoryPath": "routing-system-introductory-drupal-routes-and-controllers-example-guide.md",
+          "project": "routing-system-introductory-drupal-routes-and-controllers-example-guide.md",
+          "sourceType": "official_guide",
+          "score": 0.779
+        },
+        {
+          "rank": 2,
+          "docId": "doc_FuR7BRFt_vOYY6uFEepsRW4X",
+          "title": "routing.api.php",
+          "repositoryPath": "core/lib/Drupal/Core/Routing/routing.api.php",
+          "project": "drupal",
+          "sourceType": "core_code",
+          "score": 0.452
+        },
+        {
+          "rank": 3,
+          "docId": "doc_Wa8zt4Bus1r5BJWGVlQQTLEl",
+          "title": "service.rst",
+          "repositoryPath": "controller/service.rst",
+          "project": "controller",
+          "sourceType": "symfony",
+          "score": 0.422
+        },
+        {
+          "rank": 4,
+          "docId": "doc_WESczZiM2_MFFGvHVuygyfGV",
+          "title": "Routing system overview",
+          "repositoryPath": "routing-system-routing-system-overview-guide.md",
+          "project": "routing-system-routing-system-overview-guide.md",
+          "sourceType": "official_guide",
+          "score": 0.418
+        },
+        {
+          "rank": 5,
+          "docId": "doc_OPDETjy4avVStZYe-b4IaICq",
+          "title": "yaml_parse_url",
+          "repositoryPath": "sections/yaml_parse_url.md",
+          "project": "sections",
+          "sourceType": "php",
+          "score": 0.376
+        }
+      ],
+      "forbiddenHits": []
+    }
+  ],
+  "retrieval": {
+    "verdict": "pass",
+    "detail": "kq: expected doc rank 4 in top-5 for kq; question: expected doc rank 2 in top-5 for question"
+  },
+  "locatedDocIds": [
+    "doc_MpPzVI1ykyN8HEaAxVkL6zAD",
+    "doc_jZAJI_W3hc8Ai_Ny8qn8AGZz",
+    "doc_9dhbvf3OECTk6ewFfVEpFCgJ",
+    "doc_Okst07SN6rjDtJmS3IOHHxLY",
+    "doc_XbSawsdHm2Ntc9gEYOtx1H2J",
+    "doc_JoLjxMQmIBbLit7QnkjqVkQw",
+    "doc_FuR7BRFt_vOYY6uFEepsRW4X",
+    "doc_Wa8zt4Bus1r5BJWGVlQQTLEl",
+    "doc_WESczZiM2_MFFGvHVuygyfGV",
+    "doc_OPDETjy4avVStZYe-b4IaICq"
+  ],
+  "ledgerProposals": [],
+  "answerability": [
+    {
+      "model": "llama31-8b-16k",
+      "depth": "ask",
+      "expertStatus": "answered",
+      "durationMs": 31275,
+      "verdict": "inconclusive",
+      "markerScoring": {
+        "failHits": [],
+        "passCount": 2
+      },
+      "claimSupport": {
+        "verdict": "uncited",
+        "counts": {
+          "supported": 0,
+          "weak": 0,
+          "unsupported": 0,
+          "uncited": 8,
+          "unresolved": 0
+        },
+        "groundingDensity": 0,
+        "versionFlags": [],
+        "unresolvedCitations": 0,
+        "citedIds": []
+      },
+      "flagged": true,
+      "answer": "Objective: Register a custom route in Drupal 10 to return rendered output from a custom module.\n\nTo register a custom route in Drupal 10, you need to define a new route in `your_module.routing.yml` file.\n\n```yml\nyour_module.your_route:\n  path: '/hello'\n  defaults:\n    _controller: '\\Drupal\\your_module\\Controller\\YourController::yourMethod'\n    _title: 'Hello World'\n```\n\nIn the above code, replace `your_module` and `your_route` with your actual module name and route name. The `YourController` class should implement a method named `yourMethod` that returns the rendered output.\n\n```php\nnamespace Drupal\\your_module\\Controller;\n\nuse Drupal\\Core\\Controller\\ControllerBase;\n\nclass YourController extends ControllerBase {\n\n  public function yourMethod() {\n    return $this->render('your_template');\n  }\n\n}\n```\n\nIn the above code, replace `your_template` with your actual template file name.\n\nYou also need to clear the Drupal cache after registering the new route.\n\nVersion notes: This solution is for Drupal 10. Please adjust the code according to your needs.",
+      "usage": null,
+      "estimateNotAvailable": true
+    }
+  ],
+  "verdict": "pass",
+  "notes": [],
+  "model": [
+    "llama31-8b-16k"
+  ]
+}

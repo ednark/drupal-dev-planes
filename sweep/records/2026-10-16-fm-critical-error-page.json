@@ -1,0 +1,32 @@
+{
+  "sweepId": "fm-critical-error-page",
+  "family": "failure-mode",
+  "target": "critical-error-page",
+  "startedAt": "2026-10-16T06:15:07.021Z",
+  "finishedAt": "2026-10-16T06:15:09.137Z",
+  "fixture": {
+    "site": "usagov2021",
+    "url": "https://usagov2021.ddev.site",
+    "drupal": "10.6",
+    "scratch": false
+  },
+  "mutations": [
+    {
+      "kind": "file-edit",
+      "detail": "git apply carousel bad patch (controlled dead page for threshold re-measurement)",
+      "reverted": true
+    }
+  ],
+  "reproduce": {
+    "verdict": "pass",
+    "detail": "controlled dead page https://usagov2021.ddev.site -> ok/server_error (byteSize=2527)"
+  },
+  "detect": {
+    "verdict": "pass",
+    "tool": "verify_page",
+    "detail": "thresholds re-measured: 5xx=dead, marker=dead, <64B-200=suspicious -> got server_error (byteSize=2527)"
+  },
+  "verdict": "pass",
+  "notes": [],
+  "model": null
+}

@@ -1,0 +1,34 @@
+{
+  "sweepId": "fm-undeclared-service-dependency",
+  "family": "failure-mode",
+  "target": "undeclared-service-dependency",
+  "startedAt": "2026-10-16T07:27:05.000Z",
+  "finishedAt": "2026-10-16T07:27:05.994Z",
+  "fixture": {
+    "site": "usagov-sweep-scratch",
+    "url": "https://usagov-sweep-scratch.ddev.site",
+    "drupal": "10.6",
+    "scratch": true
+  },
+  "mutations": [
+    {
+      "kind": "pm-enable-attempt",
+      "detail": "pm:enable sweep_stub_dep (declares no dependency; its service references a non-existent one)",
+      "reverted": true
+    }
+  ],
+  "reproduce": {
+    "verdict": "pass",
+    "detail": "pm:enable stub exit=1, fatal=named missing service, stderr= In CheckExceptionOnInvalidReferenceBehaviorPass.php line 119:                                                                                   The service \"sweep_stub_dep.broken\""
+  },
+  "detect": {
+    "verdict": "pass",
+    "tool": "drush_dispatch(cr) — half-commit hazard check",
+    "detail": "post-failed-enable cr exit=1, fatal=named the missing service (recipe must catch the half-committed module)"
+  },
+  "verdict": "pass",
+  "notes": [
+    "post-teardown fixture UNHEALTHY: health probe on undefined -> error/undefined"
+  ],
+  "model": null
+}

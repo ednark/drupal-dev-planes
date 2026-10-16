@@ -1,0 +1,179 @@
+{
+  "sweepId": "cs-currentuser",
+  "family": "corpus",
+  "target": "currentuser",
+  "startedAt": "2026-10-16T07:55:39.592Z",
+  "finishedAt": "2026-10-16T07:59:04.803Z",
+  "fixture": {
+    "site": "corpus",
+    "url": "drupal-dev-mcp index",
+    "drupal": "10.6"
+  },
+  "mutations": [],
+  "queries": [
+    {
+      "type": "kq",
+      "query": "current user account service getCurrentAccount",
+      "durationMs": 172,
+      "verdict": "pass",
+      "detail": "expected doc rank 1 in top-5 for kq",
+      "bestExpectedRank": 1,
+      "topK": [
+        {
+          "rank": 1,
+          "docId": "doc_vCFLitKAQRSKsTDyYmB829o7",
+          "title": "Getting the currently logged-in user",
+          "repositoryPath": "02-current-user.md",
+          "project": "02-current-user.md",
+          "sourceType": "guidance",
+          "score": 0.878
+        },
+        {
+          "rank": 2,
+          "docId": "doc_1tChASFkHHwegNB1rMJKktOC",
+          "title": "masquerade.module",
+          "repositoryPath": "masquerade.module",
+          "project": "masquerade",
+          "sourceType": "contrib_code",
+          "score": 0.872
+        },
+        {
+          "rank": 3,
+          "docId": "doc_zy6FQgQC_ANyvTSam0ShAZH9",
+          "title": "Services & Dependency Injection",
+          "repositoryPath": "skills/drupal-at-your-fingertips/references/services.md",
+          "project": "skills",
+          "sourceType": "skill",
+          "score": 0.872
+        },
+        {
+          "rank": 4,
+          "docId": "doc_pa8eld4XhHiEGjYnkx5SsDVi",
+          "title": "UserRequestSubscriber.php",
+          "repositoryPath": "core/modules/user/src/EventSubscriber/UserRequestSubscriber.php",
+          "project": "drupal",
+          "sourceType": "core_code",
+          "score": 0.871
+        },
+        {
+          "rank": 5,
+          "docId": "doc_BmdgBKWEy_aFyF3b8CorsHTe",
+          "title": "openid_connect.module",
+          "repositoryPath": "openid_connect.module",
+          "project": "openid_connect",
+          "sourceType": "contrib_code",
+          "score": 0.869
+        }
+      ],
+      "forbiddenHits": []
+    },
+    {
+      "type": "question",
+      "query": "In Drupal 10 custom module code, how do I get the currently logged-in user account? Show code.",
+      "durationMs": 536,
+      "verdict": "pass",
+      "detail": "expected doc rank 1 in top-5 for question",
+      "bestExpectedRank": 1,
+      "topK": [
+        {
+          "rank": 1,
+          "docId": "doc_vCFLitKAQRSKsTDyYmB829o7",
+          "title": "Getting the currently logged-in user",
+          "repositoryPath": "02-current-user.md",
+          "project": "02-current-user.md",
+          "sourceType": "guidance",
+          "score": 0.825
+        },
+        {
+          "rank": 2,
+          "docId": "doc_yrgrfZrZUoQmOQ-N8_AOgCDv",
+          "title": "filter.module",
+          "repositoryPath": "core/modules/filter/filter.module",
+          "project": "drupal",
+          "sourceType": "core_code",
+          "score": 0.785
+        },
+        {
+          "rank": 3,
+          "docId": "doc_w-WO7EiL2ktB5LRRj5gETsae",
+          "title": "Subscribe to and dispatch events",
+          "repositoryPath": "creating-custom-modules-subscribe-to-and-dispatch-events-guide.md",
+          "project": "creating-custom-modules-subscribe-to-and-dispatch-events-guide.md",
+          "sourceType": "official_guide",
+          "score": 0.769
+        },
+        {
+          "rank": 4,
+          "docId": "doc_OYyNUtcZdglMJTOmltfhDBYo",
+          "title": "Subscribe to and dispatch events",
+          "repositoryPath": "drupal-org-docs/docs-develop-creating-modules-subscribe-to-and-dispatch-events.md",
+          "project": "drupal-org-docs",
+          "sourceType": "tutorial",
+          "score": 0.769
+        },
+        {
+          "rank": 5,
+          "docId": "doc_kAGZrnEox9JZb1C1c5ShFsgt",
+          "title": "user.module",
+          "repositoryPath": "core/modules/user/user.module",
+          "project": "drupal",
+          "sourceType": "core_code",
+          "score": 0.764
+        }
+      ],
+      "forbiddenHits": []
+    }
+  ],
+  "retrieval": {
+    "verdict": "pass",
+    "detail": "kq: expected doc rank 1 in top-5 for kq; question: expected doc rank 1 in top-5 for question"
+  },
+  "locatedDocIds": [
+    "doc_vCFLitKAQRSKsTDyYmB829o7",
+    "doc_1tChASFkHHwegNB1rMJKktOC",
+    "doc_zy6FQgQC_ANyvTSam0ShAZH9",
+    "doc_pa8eld4XhHiEGjYnkx5SsDVi",
+    "doc_BmdgBKWEy_aFyF3b8CorsHTe",
+    "doc_yrgrfZrZUoQmOQ-N8_AOgCDv",
+    "doc_w-WO7EiL2ktB5LRRj5gETsae",
+    "doc_OYyNUtcZdglMJTOmltfhDBYo",
+    "doc_kAGZrnEox9JZb1C1c5ShFsgt"
+  ],
+  "ledgerProposals": [],
+  "answerability": [
+    {
+      "model": "llama31-8b-16k",
+      "depth": "ask",
+      "expertStatus": "answered",
+      "durationMs": 25036,
+      "verdict": "inconclusive",
+      "markerScoring": {
+        "failHits": [],
+        "passCount": 1
+      },
+      "claimSupport": {
+        "verdict": "uncited",
+        "counts": {
+          "supported": 0,
+          "weak": 0,
+          "unsupported": 0,
+          "uncited": 7,
+          "unresolved": 0
+        },
+        "groundingDensity": 0,
+        "versionFlags": [],
+        "unresolvedCitations": 0,
+        "citedIds": []
+      },
+      "flagged": true,
+      "answer": "Objective: To get the currently logged-in user account in custom module code in Drupal 10.\n\nTo get the currently logged-in user account in Drupal 10, you can use the `currentUser()` function, which is available in the `Drupal` namespace.\n\nHere's an example of how to use it:\n```php\n$account = \\Drupal::currentUser();\n```\nThis will give you the currently logged-in user account as an instance of the `AccountInterface` interface.\n\nAlternatively, you can use the `filter_default_format()` function, which takes an instance of `AccountInterface` as an argument and returns the currently logged-in user's default text format.\n```php\n$account = \\Drupal::moduleHandler()->invokeAll('user_login');\n```\nNote that the `currentUser()` function is available in the `Drupal` namespace, and it is not necessary to use the `filter_default_format()` function to get the currently logged-in user account.\n\nVersion notes: This answer is applicable to Drupal 10.",
+      "usage": null,
+      "estimateNotAvailable": true
+    }
+  ],
+  "verdict": "pass",
+  "notes": [],
+  "model": [
+    "llama31-8b-16k"
+  ]
+}

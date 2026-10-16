@@ -1,0 +1,5 @@
+name: 'Sweep Stub Dep'
+type: module
+description: 'Sweep fixture: declares a service referencing a non-existent dependency. Used to induce the measured half-install/undeclared-dependency failure modes on a scratch site. Never enable outside a sweep.'
+package: sweep
+core_version_requirement: ^10 || ^11

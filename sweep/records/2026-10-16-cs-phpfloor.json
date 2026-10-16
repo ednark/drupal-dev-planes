@@ -1,0 +1,205 @@
+{
+  "sweepId": "cs-phpfloor",
+  "family": "corpus",
+  "target": "phpfloor",
+  "startedAt": "2026-10-16T07:55:42.474Z",
+  "finishedAt": "2026-10-16T07:59:04.804Z",
+  "fixture": {
+    "site": "corpus",
+    "url": "drupal-dev-mcp index",
+    "drupal": "11.4"
+  },
+  "mutations": [],
+  "queries": [
+    {
+      "type": "kq",
+      "query": "Drupal 11 requirements PHP 8.3 composer.json",
+      "durationMs": 249,
+      "verdict": "pass",
+      "detail": "expected doc rank 1 in top-5 for kq",
+      "bestExpectedRank": 1,
+      "topK": [
+        {
+          "rank": 1,
+          "docId": "doc_GOTe9jiGgxdNBe1CS43CPGfw",
+          "title": "composer.json",
+          "repositoryPath": "core/lib/Drupal/Component/Discovery/composer.json",
+          "project": "drupal",
+          "sourceType": "core_code",
+          "score": 0.593
+        },
+        {
+          "rank": 2,
+          "docId": "doc_qHA182dQ8cuzgRzm2kQGtOxh",
+          "title": "composer.json",
+          "repositoryPath": "core/lib/Drupal/Component/Annotation/composer.json",
+          "project": "drupal",
+          "sourceType": "core_code",
+          "score": 0.593
+        },
+        {
+          "rank": 3,
+          "docId": "doc_y2ewOZtwUNlUzD2Jx7sZ865z",
+          "title": "composer.json",
+          "repositoryPath": "core/lib/Drupal/Component/PhpStorage/composer.json",
+          "project": "drupal",
+          "sourceType": "core_code",
+          "score": 0.592
+        },
+        {
+          "rank": 4,
+          "docId": "doc_B2q_bWtcvN7T1QvL8Ne91XE_",
+          "title": "composer.json",
+          "repositoryPath": "core/lib/Drupal/Component/FrontMatter/composer.json",
+          "project": "drupal",
+          "sourceType": "core_code",
+          "score": 0.591
+        },
+        {
+          "rank": 5,
+          "docId": "doc_fUTw5ftnTcBZwMumMcBnqmKW",
+          "title": "composer.json",
+          "repositoryPath": "core/lib/Drupal/Component/Render/composer.json",
+          "project": "drupal",
+          "sourceType": "core_code",
+          "score": 0.591
+        }
+      ],
+      "forbiddenHits": []
+    },
+    {
+      "type": "question",
+      "query": "What is the minimum PHP version Drupal 11 requires?",
+      "durationMs": 382,
+      "verdict": "pass",
+      "detail": "expected doc rank 3 in top-5 for question",
+      "bestExpectedRank": 3,
+      "topK": [
+        {
+          "rank": 1,
+          "docId": "doc_k4Pjr9wqvsKihiIMSfGGFqrf",
+          "title": "module.api.php",
+          "repositoryPath": "core/lib/Drupal/Core/Extension/module.api.php",
+          "project": "drupal",
+          "sourceType": "core_code",
+          "score": 0.866
+        },
+        {
+          "rank": 2,
+          "docId": "doc_Alkmg3VzxYWwvNqKibGYWCLT",
+          "title": "ComponentGenerator.php",
+          "repositoryPath": "composer/Generator/ComponentGenerator.php",
+          "project": "drupal",
+          "sourceType": "core_code",
+          "score": 0.648
+        },
+        {
+          "rank": 3,
+          "docId": "doc_42MbSmqU2l2LRCawXOPP9Oj2",
+          "title": "SystemRequirements.php",
+          "repositoryPath": "core/modules/system/src/Install/Requirements/SystemRequirements.php",
+          "project": "drupal",
+          "sourceType": "core_code",
+          "score": 0.648
+        },
+        {
+          "rank": 4,
+          "docId": "doc_9WhMjVwR1lz7IqjGrBAoiYwI",
+          "title": "Tasks.php",
+          "repositoryPath": "core/lib/Drupal/Core/Database/Install/Tasks.php",
+          "project": "drupal",
+          "sourceType": "core_code",
+          "score": 0.639
+        },
+        {
+          "rank": 5,
+          "docId": "doc_-PV9lWiM8Q9NBjE6uySZCs11",
+          "title": "Composer.php",
+          "repositoryPath": "composer/Composer.php",
+          "project": "drupal",
+          "sourceType": "core_code",
+          "score": 0.614
+        }
+      ],
+      "forbiddenHits": []
+    }
+  ],
+  "retrieval": {
+    "verdict": "pass",
+    "detail": "kq: expected doc rank 1 in top-5 for kq; question: expected doc rank 3 in top-5 for question"
+  },
+  "locatedDocIds": [
+    "doc_GOTe9jiGgxdNBe1CS43CPGfw",
+    "doc_qHA182dQ8cuzgRzm2kQGtOxh",
+    "doc_y2ewOZtwUNlUzD2Jx7sZ865z",
+    "doc_B2q_bWtcvN7T1QvL8Ne91XE_",
+    "doc_fUTw5ftnTcBZwMumMcBnqmKW",
+    "doc_k4Pjr9wqvsKihiIMSfGGFqrf",
+    "doc_Alkmg3VzxYWwvNqKibGYWCLT",
+    "doc_42MbSmqU2l2LRCawXOPP9Oj2",
+    "doc_9WhMjVwR1lz7IqjGrBAoiYwI",
+    "doc_-PV9lWiM8Q9NBjE6uySZCs11"
+  ],
+  "ledgerProposals": [
+    {
+      "issueId": "php-floor-drupal-11-contrib-proximity",
+      "type": "locatedDocIds",
+      "docIds": [
+        "doc_GOTe9jiGgxdNBe1CS43CPGfw",
+        "doc_qHA182dQ8cuzgRzm2kQGtOxh",
+        "doc_y2ewOZtwUNlUzD2Jx7sZ865z",
+        "doc_B2q_bWtcvN7T1QvL8Ne91XE_",
+        "doc_fUTw5ftnTcBZwMumMcBnqmKW",
+        "doc_k4Pjr9wqvsKihiIMSfGGFqrf",
+        "doc_Alkmg3VzxYWwvNqKibGYWCLT",
+        "doc_42MbSmqU2l2LRCawXOPP9Oj2",
+        "doc_9WhMjVwR1lz7IqjGrBAoiYwI",
+        "doc_-PV9lWiM8Q9NBjE6uySZCs11"
+      ]
+    },
+    {
+      "issueId": "php-floor-drupal-11-contrib-proximity",
+      "type": "observation",
+      "text": "B1 retrieval 2026-10-16: kq=pass (expected doc rank 1 in top-5 for kq); question=pass (expected doc rank 3 in top-5 for question)"
+    }
+  ],
+  "answerability": [
+    {
+      "model": "llama31-8b-16k",
+      "depth": "ask",
+      "expertStatus": "answered",
+      "durationMs": 18284,
+      "verdict": "fail",
+      "markerScoring": {
+        "failHits": [],
+        "passCount": 1
+      },
+      "claimSupport": {
+        "verdict": "unsupported",
+        "counts": {
+          "supported": 0,
+          "weak": 1,
+          "unsupported": 1,
+          "uncited": 3,
+          "unresolved": 0
+        },
+        "groundingDensity": 0.4,
+        "versionFlags": [],
+        "unresolvedCitations": 0,
+        "citedIds": [
+          "doc_-PV9lWiM8Q9NBjE6uySZCs11",
+          "doc_lMZEr9fl6AIl3iDam7XS3fx4"
+        ]
+      },
+      "flagged": true,
+      "answer": "Objective: Determine the minimum PHP version required for Drupal 11.\n\nMinimum PHP version required for Drupal 11: VersionParser::normalize validates that the version is valid, and it is used in composer.json files for specifying the required PHP version. In the example drupal://document/doc_-PV9lWiM8Q9NBjE6uySZCs11, PHP version 8.3 is used. Similarly, in drupal://document/doc_lMZEr9fl6AIl3iDam7XS3fx4, PHP version 8.3 is used for Drupal 10.6.\n\nVersion notes: Drupal version 11.4.x; all cited evidence is for Drupal 11.",
+      "usage": null,
+      "estimateNotAvailable": true
+    }
+  ],
+  "verdict": "pass",
+  "notes": [],
+  "model": [
+    "llama31-8b-16k"
+  ]
+}

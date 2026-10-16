@@ -1,0 +1,180 @@
+{
+  "sweepId": "cs-dbquery",
+  "family": "corpus",
+  "target": "dbquery",
+  "startedAt": "2026-10-16T07:55:38.860Z",
+  "finishedAt": "2026-10-16T07:59:04.803Z",
+  "fixture": {
+    "site": "corpus",
+    "url": "drupal-dev-mcp index",
+    "drupal": "10.6"
+  },
+  "mutations": [],
+  "queries": [
+    {
+      "type": "kq",
+      "query": "database connection select query service injection",
+      "durationMs": 163,
+      "verdict": "pass",
+      "detail": "expected doc rank 1 in top-5 for kq",
+      "bestExpectedRank": 1,
+      "topK": [
+        {
+          "rank": 1,
+          "docId": "doc_ZTNrielY-O98Yov7NncjfxAX",
+          "title": "Database abstraction layer | Drupal API",
+          "repositoryPath": "database.md",
+          "project": "database.md",
+          "sourceType": "api",
+          "score": 0.927
+        },
+        {
+          "rank": 2,
+          "docId": "doc_XcUCsNirVN0BjGcxGZOLszjP",
+          "title": "Structure of a service file",
+          "repositoryPath": "drupal-org-docs/docs-drupal-apis-services-and-dependency-injection-structure-of-a-service-file.md",
+          "project": "drupal-org-docs",
+          "sourceType": "tutorial",
+          "score": 0.923
+        },
+        {
+          "rank": 3,
+          "docId": "doc_8v9qWn1O8PZWK3aivOgirCxZ",
+          "title": "Structure of a service file",
+          "repositoryPath": "services-and-dependency-injection-structure-of-a-service-file-guide.md",
+          "project": "services-and-dependency-injection-structure-of-a-service-file-guide.md",
+          "sourceType": "official_guide",
+          "score": 0.923
+        },
+        {
+          "rank": 4,
+          "docId": "doc_Fq1cGPuqZpSIKXyDeWks_oF6",
+          "title": "database.api.php",
+          "repositoryPath": "core/lib/Drupal/Core/Database/database.api.php",
+          "project": "drupal",
+          "sourceType": "core_code",
+          "score": 0.92
+        },
+        {
+          "rank": 5,
+          "docId": "doc_FwczuCM3r7jwgocB2eKWzRqp",
+          "title": "Static Queries",
+          "repositoryPath": "database-api-static-queries-guide.md",
+          "project": "database-api-static-queries-guide.md",
+          "sourceType": "official_guide",
+          "score": 0.915
+        }
+      ],
+      "forbiddenHits": []
+    },
+    {
+      "type": "question",
+      "query": "In Drupal 10, how do I run a SELECT query against the site database from a custom module? Show code.",
+      "durationMs": 569,
+      "verdict": "pass",
+      "detail": "expected doc rank 2 in top-5 for question",
+      "bestExpectedRank": 2,
+      "topK": [
+        {
+          "rank": 1,
+          "docId": "doc_LnZG_5pmXimSbgO4Wt5RhQk1",
+          "title": "DDEV for Drupal Development",
+          "repositoryPath": "skills/drupal-ddev/SKILL.md",
+          "project": "skills",
+          "sourceType": "skill",
+          "score": 0.795
+        },
+        {
+          "rank": 2,
+          "docId": "doc_jX-ApE3ZLhqWOFHqWDXJ6C5o",
+          "title": "Connection.php",
+          "repositoryPath": "core/lib/Drupal/Core/Database/Connection.php",
+          "project": "drupal",
+          "sourceType": "core_code",
+          "score": 0.787
+        },
+        {
+          "rank": 3,
+          "docId": "doc_f78hQi93ubzP6ILbb7q4X8fT",
+          "title": "NodeSearch.php",
+          "repositoryPath": "core/modules/node/src/Plugin/Search/NodeSearch.php",
+          "project": "drupal",
+          "sourceType": "core_code",
+          "score": 0.779
+        },
+        {
+          "rank": 4,
+          "docId": "doc_1TWilkVU9a_ejZLuVuUR3z4i",
+          "title": "Full patch test 1.3.x",
+          "repositoryPath": "docs/contribute/testing/full_patch_test.md",
+          "project": "ai",
+          "sourceType": "contrib_code",
+          "score": 0.77
+        },
+        {
+          "rank": 5,
+          "docId": "doc_qs8QzTJpmaGhmm1Y_2M_90ys",
+          "title": "BoostByAiSearchBase.php",
+          "repositoryPath": "modules/ai_search/src/Plugin/search_api/processor/BoostByAiSearchBase.php",
+          "project": "ai",
+          "sourceType": "contrib_code",
+          "score": 0.766
+        }
+      ],
+      "forbiddenHits": []
+    }
+  ],
+  "retrieval": {
+    "verdict": "pass",
+    "detail": "kq: expected doc rank 1 in top-5 for kq; question: expected doc rank 2 in top-5 for question"
+  },
+  "locatedDocIds": [
+    "doc_ZTNrielY-O98Yov7NncjfxAX",
+    "doc_XcUCsNirVN0BjGcxGZOLszjP",
+    "doc_8v9qWn1O8PZWK3aivOgirCxZ",
+    "doc_Fq1cGPuqZpSIKXyDeWks_oF6",
+    "doc_FwczuCM3r7jwgocB2eKWzRqp",
+    "doc_LnZG_5pmXimSbgO4Wt5RhQk1",
+    "doc_jX-ApE3ZLhqWOFHqWDXJ6C5o",
+    "doc_f78hQi93ubzP6ILbb7q4X8fT",
+    "doc_1TWilkVU9a_ejZLuVuUR3z4i",
+    "doc_qs8QzTJpmaGhmm1Y_2M_90ys"
+  ],
+  "ledgerProposals": [],
+  "answerability": [
+    {
+      "model": "llama31-8b-16k",
+      "depth": "ask",
+      "expertStatus": "answered",
+      "durationMs": 24921,
+      "verdict": "inconclusive",
+      "markerScoring": {
+        "failHits": [],
+        "passCount": 1
+      },
+      "claimSupport": {
+        "verdict": "uncited",
+        "counts": {
+          "supported": 0,
+          "weak": 0,
+          "unsupported": 0,
+          "uncited": 8,
+          "unresolved": 0
+        },
+        "groundingDensity": 0,
+        "versionFlags": [],
+        "unresolvedCitations": 0,
+        "citedIds": []
+      },
+      "flagged": true,
+      "answer": "Here is the answer to the question:\n\n**Objective:** Run a SELECT query against the site database from a custom module.\n\nTo run a SELECT query against the site database from a custom module, you can use the database service provided by Drupal. \n\nYou can inject the database service into your custom module like this: [code] public function getDatabase($connection) { $database = \\Drupal::database(); $query = $database->query(\"SELECT nid FROM {node}\"); return $query; } [/code]\n\nYou can also use the dependency injection container to inject the database service into your custom module. This is the recommended approach.\n\nVersion notes: This code is compatible with Drupal 10. \n\n[Please note that this answer is based on the provided evidence and does not include any external knowledge or assumptions.]",
+      "usage": null,
+      "estimateNotAvailable": true
+    }
+  ],
+  "verdict": "pass",
+  "notes": [],
+  "model": [
+    "llama31-8b-16k"
+  ]
+}

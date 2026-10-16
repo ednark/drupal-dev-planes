@@ -1,0 +1,200 @@
+{
+  "sweepId": "cs-sdc",
+  "family": "corpus",
+  "target": "sdc",
+  "startedAt": "2026-10-16T07:55:40.300Z",
+  "finishedAt": "2026-10-16T07:59:04.804Z",
+  "fixture": {
+    "site": "corpus",
+    "url": "drupal-dev-mcp index",
+    "drupal": "11.4"
+  },
+  "mutations": [],
+  "queries": [
+    {
+      "type": "kq",
+      "query": "single directory components SDC component theme",
+      "durationMs": 168,
+      "verdict": "pass",
+      "detail": "expected doc rank 1 in top-5 for kq",
+      "bestExpectedRank": 1,
+      "topK": [
+        {
+          "rank": 1,
+          "docId": "doc_vgxHibUwHT5HaV1ucf1w_8kq",
+          "title": "Reusable front-end components with colocated assets",
+          "repositoryPath": "03-reusable-frontend-components.md",
+          "project": "03-reusable-frontend-components.md",
+          "sourceType": "guidance",
+          "score": 0.947
+        },
+        {
+          "rank": 2,
+          "docId": "doc_cC8UMSK3DrOrd1lad_JunoFN",
+          "title": "SDC stylesheets are now added in the \"theme\" aggregate group (as opposed to \"default\" group) to correct CSS source order for components",
+          "repositoryPath": "records/sdc-stylesheets-are-now-added-in-the-theme-aggregate-group-as-opposed-to-default-group-to-correct-cs-3515838.md",
+          "project": "records",
+          "sourceType": "change_record",
+          "score": 0.939
+        },
+        {
+          "rank": 3,
+          "docId": "doc_g3qesdGboDq9SOlMKWvH3VRc",
+          "title": "Using Single-Directory Components",
+          "repositoryPath": "https-www.drupal.org-docs-develop-theming-drupal-using-single-directory-components.md",
+          "project": "https-www.drupal.org-docs-develop-theming-drupal-using-single-directory-components.md",
+          "sourceType": "official_guide",
+          "score": 0.937
+        },
+        {
+          "rank": 4,
+          "docId": "doc_pF84eE7Nr2px2DC7IV7i4f08",
+          "title": "Drupal Canvas SDC Components (Twig)",
+          "repositoryPath": "skills/drupal-canvas-sdc/SKILL.md",
+          "project": "skills",
+          "sourceType": "skill",
+          "score": 0.936
+        },
+        {
+          "rank": 5,
+          "docId": "doc_8WUw9Wz3QIbM5B2pvymvt5BN",
+          "title": "Theming Drupal",
+          "repositoryPath": "https-www.drupal.org-docs-develop-theming-drupal.md",
+          "project": "https-www.drupal.org-docs-develop-theming-drupal.md",
+          "sourceType": "official_guide",
+          "score": 0.929
+        }
+      ],
+      "forbiddenHits": []
+    },
+    {
+      "type": "question",
+      "query": "In Drupal 10.3+, what is the recommended way to create a reusable front-end component with its template, CSS and JS colocated in one directory? Name the system.",
+      "durationMs": 555,
+      "verdict": "pass",
+      "detail": "expected doc rank 1 in top-5 for question",
+      "bestExpectedRank": 1,
+      "topK": [
+        {
+          "rank": 1,
+          "docId": "doc_vgxHibUwHT5HaV1ucf1w_8kq",
+          "title": "Reusable front-end components with colocated assets",
+          "repositoryPath": "03-reusable-frontend-components.md",
+          "project": "03-reusable-frontend-components.md",
+          "sourceType": "guidance",
+          "score": 0.956
+        },
+        {
+          "rank": 2,
+          "docId": "doc_sQXAz-nEI8XK_-ThOTjRKER2",
+          "title": "from_flat_php_to_symfony.rst",
+          "repositoryPath": "introduction/from_flat_php_to_symfony.rst",
+          "project": "introduction",
+          "sourceType": "symfony",
+          "score": 0.515
+        },
+        {
+          "rank": 3,
+          "docId": "doc_IBypXnaCS4TVglbEHh1It2C2",
+          "title": "AI (Artificial Intelligence)",
+          "repositoryPath": "ai.md",
+          "project": "ai.md",
+          "sourceType": "contrib_docs",
+          "score": 0.485
+        },
+        {
+          "rank": 4,
+          "docId": "doc_ozxq0yjd-HKJ4zCTJIMgujjz",
+          "title": "runtime.rst",
+          "repositoryPath": "components/runtime.rst",
+          "project": "components",
+          "sourceType": "symfony",
+          "score": 0.479
+        },
+        {
+          "rank": 5,
+          "docId": "doc_0mFmuGnZrvksSDFT3yytz5dA",
+          "title": "Acquia Certified Drupal Front End Specialist",
+          "repositoryPath": "https-docs.acquia.com-acquia-academy-acquia-certified-drupal-front-end-specialist.md",
+          "project": "https-docs.acquia.com-acquia-academy-acquia-certified-drupal-front-end-specialist.md",
+          "sourceType": "training",
+          "score": 0.465
+        }
+      ],
+      "forbiddenHits": []
+    }
+  ],
+  "retrieval": {
+    "verdict": "pass",
+    "detail": "kq: expected doc rank 1 in top-5 for kq; question: expected doc rank 1 in top-5 for question"
+  },
+  "locatedDocIds": [
+    "doc_vgxHibUwHT5HaV1ucf1w_8kq",
+    "doc_cC8UMSK3DrOrd1lad_JunoFN",
+    "doc_g3qesdGboDq9SOlMKWvH3VRc",
+    "doc_pF84eE7Nr2px2DC7IV7i4f08",
+    "doc_8WUw9Wz3QIbM5B2pvymvt5BN",
+    "doc_sQXAz-nEI8XK_-ThOTjRKER2",
+    "doc_IBypXnaCS4TVglbEHh1It2C2",
+    "doc_ozxq0yjd-HKJ4zCTJIMgujjz",
+    "doc_0mFmuGnZrvksSDFT3yytz5dA"
+  ],
+  "ledgerProposals": [
+    {
+      "issueId": "concept-bridge-recent-era-systems",
+      "type": "locatedDocIds",
+      "docIds": [
+        "doc_vgxHibUwHT5HaV1ucf1w_8kq",
+        "doc_cC8UMSK3DrOrd1lad_JunoFN",
+        "doc_g3qesdGboDq9SOlMKWvH3VRc",
+        "doc_pF84eE7Nr2px2DC7IV7i4f08",
+        "doc_8WUw9Wz3QIbM5B2pvymvt5BN",
+        "doc_sQXAz-nEI8XK_-ThOTjRKER2",
+        "doc_IBypXnaCS4TVglbEHh1It2C2",
+        "doc_ozxq0yjd-HKJ4zCTJIMgujjz",
+        "doc_0mFmuGnZrvksSDFT3yytz5dA"
+      ]
+    },
+    {
+      "issueId": "concept-bridge-recent-era-systems",
+      "type": "observation",
+      "text": "B1 retrieval 2026-10-16: kq=pass (expected doc rank 1 in top-5 for kq); question=pass (expected doc rank 1 in top-5 for question)"
+    }
+  ],
+  "answerability": [
+    {
+      "model": "llama31-8b-16k",
+      "depth": "ask",
+      "expertStatus": "answered",
+      "durationMs": 36334,
+      "verdict": "inconclusive",
+      "markerScoring": {
+        "failHits": [],
+        "passCount": 1
+      },
+      "claimSupport": {
+        "verdict": "uncited",
+        "counts": {
+          "supported": 0,
+          "weak": 0,
+          "unsupported": 0,
+          "uncited": 26,
+          "unresolved": 0
+        },
+        "groundingDensity": 0,
+        "versionFlags": [],
+        "unresolvedCitations": 0,
+        "citedIds": []
+      },
+      "flagged": true,
+      "answer": "Here is a concise answer to the question based on the provided evidence:\n\n**Objective:**\nCreate a reusable front-end component in Drupal 10.3+ with colocated template, CSS, and JS in one directory.\n\n**Goals:**\n\n* Create a reusable front-end component\n* Component template, CSS, and JS colocated in one directory\n\n**Non-goals:**\n\n* None identified\n\n**Triage by reversibility:**\n\nAssuming colocated template, CSS, and JS is a \"hard-to-reverse\" choice, we will detail this in the following answer. \"Easy-to-reverse\" tweaks, such as file structure, are not argued here.\n\n**System:**\nThe recommended system is [Component] ( Canvas Service Discovery (Component) [SDC]).\n\n**Explanation:**\n\n1. Colocate template, CSS, and JS in one directory.\n2. In the template file (e.g., `my_block_template.html.twig`), attach the CSS and JS files using the `#[library]` syntax (e.g., `#[library] = ['my_component/my_component']`).\n3. Create a `*.libraries.yml` file in the component's directory, defining the library and its dependencies.\n4. Use the Component to render the template, CSS, and JS.\n\n**Example code:**\n```php\nnamespace Drupal\\my_module\\Component;\n\nuse Drupal\\Core\\Render\\RenderContext;\nuse Drupal\\Core\\Theme\\ThemeManager;\n\nclass MyComponent extends ComponentBase {\n\n  public function build() {\n    // Always return template for Canvas preview support\n    return [\n      '#theme' => 'my_block_template',\n      '#content' => $content ?? NULL,\n      '#attached' => [\n        '[library]' => ['my_module/my_component'],\n      ],\n      '#cache' => ['contexts' => ['user']],\n    ];\n  }\n}\n```\n**Alternatives considered:**\n\nNoted that drupal's traditional Block approach is less preferable, requiring explicit library attachment for render and preview support.\n\n**Open issues:**\n\n1. Which naming conventions and file structure should be used for colocated files?\n    * **Problem:** Unclear naming convention standards.\n    * **Options:** Follow `https://www.drupal.org/docs/develop/standards/css/css-file-organization-for-drupal-8` guidelines.\n    * **Next step:** Research and document recommended naming conventions and file structure for colocation.\n2. When to define and attach libraries (e.g., `*.libraries.yml`)?\n    * **Problem:** Unclear best practices for attaching libraries.\n    * **Options:** Attach library in component's `*.libraries.yml` file or in the `attached` array of a render array.\n    * **Next step:** Research and document recommended practices for attaching libraries.\n\n**Version notes:**\n This answer is relevant for Drupal 10.3+. The Component system is introduced in Drupal 9.0.0, and is the recommended system as of this writing.",
+      "usage": null,
+      "estimateNotAvailable": true
+    }
+  ],
+  "verdict": "pass",
+  "notes": [],
+  "model": [
+    "llama31-8b-16k"
+  ]
+}

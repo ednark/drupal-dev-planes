@@ -1,0 +1,34 @@
+{
+  "sweepId": "fm-half-install-state",
+  "family": "failure-mode",
+  "target": "half-install-state",
+  "startedAt": "2026-10-16T07:25:44.783Z",
+  "finishedAt": "2026-10-16T07:25:47.627Z",
+  "fixture": {
+    "site": "usagov-sweep-scratch",
+    "url": "https://usagov-sweep-scratch.ddev.site",
+    "drupal": "10.6",
+    "scratch": true
+  },
+  "mutations": [
+    {
+      "kind": "stub-module",
+      "detail": "copy sweep_stub_dep (service references non-existent sweep.missing_service) into the scratch site, then pm:enable it (bricks bootstrap)",
+      "reverted": true
+    }
+  ],
+  "reproduce": {
+    "verdict": "pass",
+    "detail": "pm:enable stub exit=1, stderr= In CheckExceptionOnInvalidReferenceBehaviorPass.php line 119:                                                                                   The s; bootstrap=ok, pm:list=ok (bricked=true)"
+  },
+  "detect": {
+    "verdict": "pass",
+    "tool": "repair script (ddev exec php, PDO-direct) + cr + get_site_status + list_site_modules",
+    "detail": "repair exit=1, cr exit=1, bootstrap=ok, pm:list=ok (deep recovery check; recipe must unbrick)"
+  },
+  "verdict": "pass",
+  "notes": [
+    "post-teardown fixture UNHEALTHY: health probe on undefined -> error/undefined"
+  ],
+  "model": null
+}

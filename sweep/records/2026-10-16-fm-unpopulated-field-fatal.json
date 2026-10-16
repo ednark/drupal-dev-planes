@@ -1,0 +1,34 @@
+{
+  "sweepId": "fm-unpopulated-field-fatal",
+  "family": "failure-mode",
+  "target": "unpopulated-field-fatal",
+  "startedAt": "2026-10-16T06:14:41.941Z",
+  "finishedAt": "2026-10-16T06:14:45.522Z",
+  "fixture": {
+    "site": "usagov2021",
+    "url": "https://usagov2021.ddev.site",
+    "drupal": "10.6",
+    "scratch": false
+  },
+  "mutations": [
+    {
+      "kind": "file-edit",
+      "detail": "checkout pre-guard version of web/modules/custom/usagov_benefit_category_search/usagov_benefit_category_search.module (guard parent 0023e7e)",
+      "reverted": true
+    }
+  ],
+  "reproduce": {
+    "verdict": "pass",
+    "detail": "pre-guard code + cr (cr exit=0 stderr= [success] Cache rebuild complete.\n), front page (basic_page, empty field_page_type) probe -> ok/server_error (citation: 500 2090-2229B sitewide)"
+  },
+  "detect": {
+    "verdict": "pass",
+    "tool": "verify_page",
+    "detail": "detection recipe on https://usagov2021.ddev.site -> verdict=server_error (recipe must flag the page dead)"
+  },
+  "verdict": "pass",
+  "notes": [
+    "post-teardown fixture UNHEALTHY: health probe on https://usagov2021.ddev.site -> ok/server_error"
+  ],
+  "model": null
+}

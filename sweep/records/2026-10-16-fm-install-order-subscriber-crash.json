@@ -1,0 +1,34 @@
+{
+  "sweepId": "fm-install-order-subscriber-crash",
+  "family": "failure-mode",
+  "target": "install-order-subscriber-crash",
+  "startedAt": "2026-10-16T07:25:04.048Z",
+  "finishedAt": "2026-10-16T07:25:04.765Z",
+  "fixture": {
+    "site": "usagov-sweep-scratch",
+    "url": "https://usagov-sweep-scratch.ddev.site",
+    "drupal": "10.6",
+    "scratch": true
+  },
+  "mutations": [
+    {
+      "kind": "scratch-install",
+      "detail": "fresh site:install --existing-config on the scratch project (usagov_benefit_finder_api enabled in the config sync's core.extension before `file` is available)",
+      "reverted": false
+    }
+  ],
+  "reproduce": {
+    "verdict": "pass",
+    "detail": "site:install crashed mid-install:  You are about to:  * DROP all tables in your 'db' database.  [INFO] [system] [2026-10-16T03:25:03] log_stdout module installed. | uid: 0 | request-uri: https://usagov-sweep-scratch.ddev.site/ | refer:  | ip:  127.0.0.1 | link: \r [drupal \"base_url\":\"https://us"
+  },
+  "detect": {
+    "verdict": "pass",
+    "tool": "get_site_status + verify_page",
+    "detail": "bootstrap=state_unavailable, front page=server_error (recipe must catch the half-installed state)"
+  },
+  "verdict": "pass",
+  "notes": [
+    "post-teardown fixture UNHEALTHY: health probe on undefined -> error/undefined"
+  ],
+  "model": null
+}

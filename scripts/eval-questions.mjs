@@ -14,7 +14,10 @@ export const QUESTIONS = [
     tier: 1,
     q: "In Drupal 10 custom module code, how do I show a status message to the user? Show code.",
     kq: "messenger service addStatus status message",
-    fail: [/drupal_set_message/],
+    // Only recommend-usage fails: a line that mentions the legacy function
+    // WITH a deprecation cue on the same line (teaching "this was removed")
+    // is correct instruction, not a legacy-API recommendation.
+    fail: [/drupal_set_message(?![^\n]*(?:deprecated|removed|avoid|instead of|do not|don't|replaced|was used))/i],
     pass: [/messenger/i],
   },
   {

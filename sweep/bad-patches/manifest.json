@@ -1,0 +1,30 @@
+{
+  "note": "Stored bad-patches: each induces a catalog failure mode on the fixture. Applied via git apply by the sweep harness, reverted in teardown (sweep-harness-plan.md §4 A2 policy, stored bad-patches).",
+  "patches": [
+    {
+      "patch": "usagov-carousel-css-category.patch",
+      "target": "library-css-category-assertion",
+      "file": "web/themes/custom/usagov/usagov.libraries.yml",
+      "note": "retargeted 2026-10-16 from the carousel library (attached only by node--1 templates; nid 1 absent from the rebuilt fixture) to global-styling, which attaches sitewide — matching the citation's sitewide 500",
+      "apply": "git apply <patch>",
+      "expect": "sitewide 500 on every page (measured 2026-09-26: 500/3745B)",
+      "revert": "git apply -R <patch> + drush cr"
+    },
+    {
+      "patch": "stub-undeclared-module/ (directory copy, not a diff)",
+      "target": "half-install-state + undeclared-service-dependency",
+      "file": "modules/custom/sweep_stub_dep (on the SCRATCH project)",
+      "apply": "cp -r stub-undeclared-module <scratch>/web/modules/custom/sweep_stub_dep",
+      "expect": "pm:enable fatals at container compile ('non-existent service sweep.missing_service'); module may remain in core.extension (half-install) while the enable commit does not take",
+      "revert": "repair script removes it from core.extension; rm -r the module dir in teardown"
+    },
+    {
+      "patch": "(unpatch mode, not a diff — file checkout)",
+      "target": "unpopulated-field-fatal",
+      "file": "web/modules/custom/usagov_benefit_category_search/usagov_benefit_category_search.module",
+      "apply": "git checkout <guard-commit-parent> -- <file> (SWEEP_FM_UNPATCH=1)",
+      "expect": "creating a basic_page without field_page_type fatals every full-page render",
+      "revert": "git checkout HEAD -- <file> + drush cr"
+    }
+  ]
+}
