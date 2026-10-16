@@ -6,6 +6,8 @@ import { z } from "zod";
 import { callKnowledgeTool, connectKnowledge } from "@drupal-dev-planes/knowledge";
 import {
   checkRoute,
+  findContent,
+  findTerm,
   getWatchdog,
   listMenus,
   listRoles,
@@ -37,10 +39,15 @@ import {
   nodeTypeExists,
   readbackEntity,
   addField,
+  installModuleCheck,
   isEntityType,
   isFieldType,
   normalizeCreateContentTypeResult,
   normalizeAddFieldResult,
+  placeBlock,
+  readbackDisplayComponent,
+  setDisplayComponent,
+  setPermissions,
   type EntityType,
 } from "@drupal-dev-planes/writes";
 
@@ -483,6 +490,28 @@ async function main(): Promise<void> {
     },
   );
 
+  server.registerTool(
+    "find_term",
+    {
+      description: "State plane: find taxonomy terms by vocabulary and/or name (max 25) — the read that resolves entity_reference target ids before create_content.",
+      inputSchema: {
+        vocabulary: z.string().optional(),
+        name: z.string().optional(),
+      },
+      annotations: READ_ANNOTATIONS,
+    },
+    async ({ vocabulary, name }) => {
+      if (!vocabulary && !name) {
+        return textResult(envelope("state", "error", null, drushProvenance(config), ["provide vocabulary and/or name"]));
+      }
+      const read = await findTerm(drushConfig(config), { vocabulary, name });
+      if (!read.ok) {
+        return textResult(envelope("state", "state_unavailable", { stderr: read.stderr }, drushProvenance(config)));
+      }
+      return textResult(envelope("state", "ok", { count: read.value.length, terms: read.value }, drushProvenance(config)));
+    },
+  );
+
   // ----- Writes plane (guarded semantic writes; gated) -----
 
   server.registerTool(
@@ -526,6 +555,8 @@ async function main(): Promise<void> {
         title: z.string().min(1),
         fields: z.record(z.unknown()).default({}),
         published: z.boolean().default(true),
+        alias: z.string().optional(),
+        moderation_state: z.string().optional(),
       },
       annotations: {
         readOnlyHint: false,
@@ -534,7 +565,7 @@ async function main(): Promise<void> {
         openWorldHint: true,
       },
     },
-    async ({ entity_type, bundle, title, fields, published }) => {
+    async ({ entity_type, bundle, title, fields, published, alias, moderation_state }) => {
       const gateNote = requireExecGate(config);
       if (gateNote) {
         return textResult(envelope("writes", "unavailable", null, drushProvenance(config), gateNote));
@@ -566,6 +597,8 @@ async function main(): Promise<void> {
         title,
         published,
         fields,
+        alias,
+        moderationState: moderation_state,
       });
       if (!write.ok) {
         return textResult(envelope("writes", "state_unavailable", { bundle, stderr: write.stderr }, drushProvenance(config)));
@@ -777,6 +810,204 @@ async function main(): Promise<void> {
           ? "Commit reported; delivery NOT verified. REQUIRED field: content created without it will be refused by create_content (unpopulated-field-fatal is the measured class this prevents)."
           : "Commit reported; delivery NOT verified.",
         "Follow with get_bundle_fields read-back — the field must appear with the expected type and required flag.",
+      ]));
+    },
+  );
+
+  server.registerTool(
+    "find_content",
+    {
+      description: "State plane: find content nodes by bundle and/or title (max 25) — read before creating or deleting so idempotency is a read, not a guess.",
+      inputSchema: {
+        bundle: z.string().optional(),
+        title: z.string().optional(),
+      },
+      annotations: READ_ANNOTATIONS,
+    },
+    async ({ bundle, title }) => {
+      if (!bundle && !title) {
+        return textResult(envelope("state", "error", null, drushProvenance(config), ["provide bundle and/or title"]));
+      }
+      const read = await findContent(drushConfig(config), { bundle, title });
+      if (!read.ok) {
+        return textResult(envelope("state", "state_unavailable", { stderr: read.stderr }, drushProvenance(config)));
+      }
+      return textResult(envelope("state", "ok", { count: read.value.length, hits: read.value }, drushProvenance(config)));
+    },
+  );
+
+  server.registerTool(
+    "set_permissions",
+    {
+      description: "Writes plane: grant/revoke permissions on a role. Precondition: role exists, permissions are known to Drupal. Paired verification: list_roles read-back. GATED.",
+      inputSchema: {
+        role: z.string().min(1),
+        grant: z.array(z.string()).default([]),
+        revoke: z.array(z.string()).default([]),
+      },
+      annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: true },
+    },
+    async ({ role, grant, revoke }) => {
+      const gateNote = requireExecGate(config);
+      if (gateNote) {
+        return textResult(envelope("writes", "unavailable", null, drushProvenance(config), gateNote));
+      }
+      if (grant.length === 0 && revoke.length === 0) {
+        return textResult(envelope("writes", "refused", null, drushProvenance(config), ["nothing to grant or revoke"]));
+      }
+      const write = await setPermissions(drushConfig(config), { role, grant, revoke });
+      if (!write.ok) {
+        return textResult(envelope("writes", "state_unavailable", { stderr: write.stderr }, drushProvenance(config)));
+      }
+      if (write.value.errors.length > 0) {
+        return textResult(envelope("writes", "refused", { role, errors: write.value.errors }, drushProvenance(config), [
+          "refused by precondition — fix the listed problems and retry",
+        ]));
+      }
+      return textResult(envelope("writes", "ok", { role, granted: write.value.granted, revoked: write.value.revoked }, { ...drushProvenance(config), gated: true }, [
+        "Commit reported; delivery NOT verified. Follow with list_roles read-back before claiming success.",
+      ]));
+    },
+  );
+
+  server.registerTool(
+    "install_module",
+    {
+      description: "Writes plane: enable a module AFTER the dependency-safety scan — missing dependencies refuse (install-order class), missing service references refuse (undeclared-service-dependency class, measured). Paired verification: list_site_modules read-back. GATED.",
+      inputSchema: {
+        module: z.string().min(1),
+      },
+      annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: false, openWorldHint: true },
+    },
+    async ({ module }) => {
+      const gateNote = requireExecGate(config);
+      if (gateNote) {
+        return textResult(envelope("writes", "unavailable", null, drushProvenance(config), gateNote));
+      }
+      // Catalog precondition scan — the guarded refusal the measured rows
+      // (install-order-subscriber-crash, undeclared-service-dependency,
+      // half-install-state) exist to prevent.
+      const check = await installModuleCheck(drushConfig(config), module);
+      if (!check.ok) {
+        return textResult(envelope("writes", "state_unavailable", { stderr: check.stderr }, drushProvenance(config)));
+      }
+      const v = check.value;
+      if (v.scanError) {
+        const notFound = /not found/i.test(v.scanError);
+        return textResult(envelope("writes", notFound ? "refused" : "state_unavailable", { module, scanError: v.scanError }, drushProvenance(config), [
+          notFound ? `module '${module}' not found in the extension list` : `precondition scan failed: ${v.scanError}`,
+        ]));
+      }
+      if (!v.exists) {
+        return textResult(envelope("writes", "refused", { module }, drushProvenance(config), [`module '${module}' not found in the extension list`]));
+      }
+      if (v.enabled) {
+        return textResult(envelope("writes", "refused", { module }, drushProvenance(config), [
+          `module '${module}' is already enabled — read its state (list_site_modules) instead`,
+        ]));
+      }
+      if (v.missingDependencies.length > 0 || v.missingServices.length > 0) {
+        return textResult(envelope("writes", "refused", {
+          module, missingDependencies: v.missingDependencies, missingServices: v.missingServices,
+        }, drushProvenance(config), [
+          "Refused by catalog precondition: enabling this module would crash the container compile (measured rows: install-order-subscriber-crash, undeclared-service-dependency, half-install-state — the failed enable HALF-COMMITS and bricks the next cache rebuild). Install/enable the missing dependencies first.",
+        ]));
+      }
+      const enable = await runDrush(drushConfig(config), ["pm:enable", module, "-y"], 120_000);
+      const readBack = await runDrush(drushConfig(config), ["pm:list", "--format=json"]);
+      const modulesList = readBack.code === 0 ? normalizeModules(parseJsonLoose(readBack.stdout)) : [];
+      const enabledNow = modulesList.some((m) => m.machineName === module && m.status === "enabled");
+      if (enable.code !== 0) {
+        return textResult(envelope("writes", "error", {
+          module, exitCode: enable.code,
+          halfCommitted: enabledNow,
+          stderr: enable.stderr.slice(0, 400),
+        }, { ...drushProvenance(config), gated: true }, [
+          enabledNow
+            ? "HALF-COMMIT: pm:enable fataled but the module is in core.extension — the next cache rebuild will fatal (measured half-install-state). Run the repair recipe before anything else."
+            : "enable failed; the commit did not take.",
+        ]));
+      }
+      return textResult(envelope("writes", "ok", { module }, { ...drushProvenance(config), gated: true }, [
+        enabledNow
+          ? "Enable reported and read-back confirms enabled. Verify further if the site serves the module's routes (verify_page)."
+          : "Enable reported but read-back does NOT show the module enabled — do not claim success.",
+      ]));
+    },
+  );
+
+  server.registerTool(
+    "place_block",
+    {
+      description: "Writes plane: place a block into a theme region. Preconditions: theme installed, region defined, block id unused. Paired verification: verify_page on an affected URL. GATED.",
+      inputSchema: {
+        id: z.string().regex(/^[a-z][a-z0-9_]*$/),
+        plugin: z.string().min(1),
+        theme: z.string().min(1),
+        region: z.string().min(1),
+        label: z.string().optional(),
+      },
+      annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: false, openWorldHint: true },
+    },
+    async ({ id, plugin, theme, region, label }) => {
+      const gateNote = requireExecGate(config);
+      if (gateNote) {
+        return textResult(envelope("writes", "unavailable", null, drushProvenance(config), gateNote));
+      }
+      const write = await placeBlock(drushConfig(config), { id, plugin, theme, region, label });
+      if (!write.ok) {
+        return textResult(envelope("writes", "state_unavailable", { stderr: write.stderr }, drushProvenance(config)));
+      }
+      if (write.value.errors.length > 0) {
+        return textResult(envelope("writes", "refused", { errors: write.value.errors }, drushProvenance(config), [
+          "refused by precondition — the catalog row class here is 'block placed into a removed/undefined region', which renders fine until it doesn't",
+        ]));
+      }
+      return textResult(envelope("writes", "ok", { block: write.value.block }, { ...drushProvenance(config), gated: true }, [
+        "Commit reported; delivery NOT verified. Follow with verify_page (with `expected`) on an affected URL.",
+      ]));
+    },
+  );
+
+  server.registerTool(
+    "configure_display",
+    {
+      description: "Writes plane: set or hide a field's formatter on a view mode. Preconditions: field exists on the bundle. Paired verification: read-back of the display component. GATED.",
+      inputSchema: {
+        entity_type: z.enum(["node", "taxonomy_term", "user", "media", "block_content"]),
+        bundle: z.string().min(1),
+        field_name: z.string().min(1),
+        view_mode: z.string().default("default"),
+        formatter: z.string().min(1).optional(),
+        hidden: z.boolean().default(false),
+      },
+      annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: true },
+    },
+    async ({ entity_type, bundle, field_name, view_mode, formatter, hidden }) => {
+      const gateNote = requireExecGate(config);
+      if (gateNote) {
+        return textResult(envelope("writes", "unavailable", null, drushProvenance(config), gateNote));
+      }
+      if (!hidden && !formatter) {
+        return textResult(envelope("writes", "refused", null, drushProvenance(config), ["formatter is required unless hidden=true"]));
+      }
+      const write = await setDisplayComponent(drushConfig(config), {
+        entityType: entity_type, bundle, fieldName: field_name, viewMode: view_mode, formatter: formatter ?? "", hidden,
+      });
+      if (!write.ok) {
+        return textResult(envelope("writes", "state_unavailable", { stderr: write.stderr }, drushProvenance(config)));
+      }
+      if (write.value.errors.length > 0) {
+        return textResult(envelope("writes", "error", { errors: write.value.errors }, { ...drushProvenance(config), gated: true }, [
+          "display save threw — do not claim success.",
+        ]));
+      }
+      const read = await readbackDisplayComponent(drushConfig(config), { entityType: entity_type, bundle, fieldName: field_name, viewMode: view_mode });
+      const present = read.ok ? read.value?.present === true : null;
+      return textResult(envelope("writes", "ok", {
+        field: field_name, viewMode: view_mode, hidden, readBack: { present, component: read.ok ? read.value?.component : null },
+      }, { ...drushProvenance(config), gated: true }, [
+        "Read-back performed — if it contradicts the intent, do not claim success.",
       ]));
     },
   );

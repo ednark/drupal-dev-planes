@@ -41,3 +41,17 @@ export {
   type CreateContentTypeResult,
   type FieldType,
 } from "./contenttypes.js";
+export {
+  installModuleCheck,
+  placeBlock,
+  readbackDisplayComponent,
+  setDisplayComponent,
+  setPermissions,
+  type InstallModuleCheck,
+  type PlaceBlockPayload,
+  type PlaceBlockResult,
+  type SetDisplayPayload,
+  type SetDisplayResult,
+  type SetPermissionsPayload,
+  type SetPermissionsResult,
+} from "./site-builder.js";

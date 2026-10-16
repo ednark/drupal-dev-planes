@@ -38,6 +38,10 @@ export interface CreateContentPayload {
   bundle: string;
   title: string;
   published: boolean;
+  /** Optional URL alias (nodes with path module). */
+  alias?: string;
+  /** Optional moderation state for moderated bundles ('published', 'draft', …). */
+  moderationState?: string;
   /** Field-name → delta values, exactly as \Drupal::Entity::set() accepts them. */
   fields: Record<string, unknown>;
 }
@@ -56,7 +60,16 @@ export function createContentSnippet(payload: CreateContentPayload): string {
     `  if (!empty($p['fields']) && is_array($p['fields'])) {`,
     `    foreach ($p['fields'] as $name => $vals) { $entity->set($name, $vals); }`,
     `  }`,
+    `  if (!empty($p['moderation_state'])) { $entity->set('moderation_state', $p['moderation_state']); }`,
+    `  if (!empty($p['alias']) && $entity->hasField('path')) { $entity->set('path', ['alias' => $p['alias'], 'pathauto' => 0]); }`,
     `  $entity->save();`,
+    `  if (!empty($p['moderation_state']) && $entity->hasField('moderation_state')) {`,
+    `    // Measured 2026-10-16: the moderation initial state can override the`,
+    `    // requested transition on create — a second set+save after the first`,
+    `    // save is what actually publishes.`,
+    `    $current = $entity->get('moderation_state')->value;`,
+    `    if ($current !== $p['moderation_state']) { $entity->set('moderation_state', $p['moderation_state']); $entity->save(); }`,
+    `  }`,
     `  $r['id'] = (int) $entity->id();`,
     `  $r['uuid'] = $entity->uuid();`,
     `  $r['bundle'] = $entity->bundle();`,

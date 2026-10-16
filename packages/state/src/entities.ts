@@ -237,3 +237,95 @@ export function checkRoute(
     r.ok ? { ok: true, value: normalizeRouteCheck(r.value) } : r,
   );
 }
+
+// ---------------------------------------------------------------------------
+// Content find (idempotent-write support: locate before create/delete)
+// ---------------------------------------------------------------------------
+
+export interface ContentHit {
+  id: number;
+  uuid?: string;
+  bundle?: string;
+  title?: string;
+}
+
+const FIND_CONTENT_SNIPPET_BASE = `$storage = \\Drupal::entityTypeManager()->getStorage('node');
+$props = [];
+if (!empty($p['bundle'])) { $props['type'] = $p['bundle']; }
+if (!empty($p['title'])) { $props['title'] = $p['title']; }
+$found = $props ? $storage->loadByProperties($props) : [];
+$out = [];
+foreach ($found as $e) {
+  $out[] = ['id' => (int) $e->id(), 'uuid' => $e->uuid(), 'bundle' => $e->bundle(), 'title' => (string) $e->label()];
+}
+return json_encode(array_slice($out, 0, 25));`;
+
+export function normalizeContentHits(raw: unknown): ContentHit[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.map((row) => {
+    const r = (row ?? {}) as Record<string, unknown>;
+    return {
+      id: typeof r["id"] === "number" ? r["id"] : 0,
+      uuid: typeof r["uuid"] === "string" ? r["uuid"] : undefined,
+      bundle: typeof r["bundle"] === "string" ? r["bundle"] : undefined,
+      title: typeof r["title"] === "string" ? r["title"] : undefined,
+    };
+  }).filter((h) => h.id > 0);
+}
+
+export function findContent(
+  config: DrushConfig,
+  { bundle, title }: { bundle?: string; title?: string },
+  timeoutMs?: number,
+): Promise<EvalOutcome<ContentHit[]>> {
+  const encoded = Buffer.from(JSON.stringify({ bundle: bundle ?? null, title: title ?? null }), "utf8").toString("base64");
+  const code = `$p = json_decode(base64_decode('${encoded}'), true);\n${FIND_CONTENT_SNIPPET_BASE}`;
+  return phpEval<unknown>(config, code, timeoutMs).then((r) =>
+    r.ok ? { ok: true, value: normalizeContentHits(r.value) } : r,
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Taxonomy term lookup (entity_reference field values need target ids)
+// ---------------------------------------------------------------------------
+
+export interface TermHit {
+  tid: number;
+  name?: string;
+  vocabulary?: string;
+}
+
+const FIND_TERM_SNIPPET_BASE = `$storage = \\Drupal::entityTypeManager()->getStorage('taxonomy_term');
+$props = [];
+if (!empty($p['vocabulary'])) { $props['vid'] = $p['vocabulary']; }
+if (!empty($p['name'])) { $props['name'] = $p['name']; }
+$found = $props ? $storage->loadByProperties($props) : [];
+$out = [];
+foreach ($found as $t) {
+  $out[] = ['tid' => (int) $t->id(), 'name' => (string) $t->label(), 'vocabulary' => (string) $t->bundle()];
+}
+return json_encode(array_slice($out, 0, 25));`;
+
+export function normalizeTermHits(raw: unknown): TermHit[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.map((row) => {
+    const r = (row ?? {}) as Record<string, unknown>;
+    return {
+      tid: typeof r["tid"] === "number" ? r["tid"] : 0,
+      name: typeof r["name"] === "string" ? r["name"] : undefined,
+      vocabulary: typeof r["vocabulary"] === "string" ? r["vocabulary"] : undefined,
+    };
+  }).filter((t) => t.tid > 0);
+}
+
+export function findTerm(
+  config: DrushConfig,
+  { vocabulary, name }: { vocabulary?: string; name?: string },
+  timeoutMs?: number,
+): Promise<EvalOutcome<TermHit[]>> {
+  const encoded = Buffer.from(JSON.stringify({ vocabulary: vocabulary ?? null, name: name ?? null }), "utf8").toString("base64");
+  const code = `$p = json_decode(base64_decode('${encoded}'), true);\n${FIND_TERM_SNIPPET_BASE}`;
+  return phpEval<unknown>(config, code, timeoutMs).then((r) =>
+    r.ok ? { ok: true, value: normalizeTermHits(r.value) } : r,
+  );
+}

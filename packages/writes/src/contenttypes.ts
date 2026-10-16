@@ -24,7 +24,11 @@ export function nodeTypeExists(
     config,
     wrapWithPayload({ bundle }, NODE_TYPE_EXISTS_SNIPPET),
     timeoutMs,
-  ).then((r) => (r.ok ? { ok: true, value: r.value?.exists === true } : r));
+  ).then((r) => {
+    if (!r.ok) return r;
+    const v = (r.value ?? {}) as Record<string, unknown>;
+    return { ok: true as const, value: v["exists"] === true };
+  });
 }
 
 function wrapWithPayload(payload: Record<string, unknown>, body: string): string {
