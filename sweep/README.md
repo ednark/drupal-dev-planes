@@ -1,8 +1,11 @@
 # Sweep harness — Stage A (Phases 1–2 implemented)
 
-Implements `docs/sweep-harness-plan.md`: records are the source of truth, the
-verdict enum is closed (`pass | fail | skipped | inconclusive`), sweeps go
-through the planes, mutations are declared and reversible.
+Implements `docs/sweep-harness-plan.md`. A **sweep** is a measurement run:
+pick a catalog row (or corpus fixture), reproduce the failure on a live
+fixture, run the row's detection recipe through the plane tools, and record
+the verdict. Records are the source of truth, the verdict enum is closed
+(`pass | fail | skipped | inconclusive`), sweeps go through the planes, and
+mutations are declared and reversible.
 
 ## Commands
 

@@ -2,7 +2,8 @@
 
 The working harness for Drupal development agents. One MCP server with four
 planes — **knowledge**, **state**, **verification**, **guarded writes** —
-built around a single rule borrowed from mosaic-headless:
+built around a single rule borrowed from mosaic-headless (our predecessor
+Drupal harness project):
 
 > **Never trust the commit.** An exit code of 0 is not evidence of a working
 > site.
@@ -23,9 +24,23 @@ built around a single rule borrowed from mosaic-headless:
   verification recipe and declared revert.
 
 Plus `data/failure-modes.json`: a Drupal silent-failure catalog where every
-row is honest about its evidence (`claimed` until a sweep reproduces the
-failure and proves the detection recipe catches it), and `sweep/`: the
+row is honest about its evidence (`claimed` until a **sweep** — a
+measurement run that reproduces the failure on a live fixture, proves the
+detection recipe catches it, and records the result), and `sweep/`: the
 instrument that makes those claims mechanical.
+
+## The vocabulary
+
+| Term | Meaning |
+|---|---|
+| **plane** | One of four truth domains — knowledge (what Drupal is), state (what this site is), verification (what actually happened), writes (what may be committed). Every tool response names its plane. |
+| **catalog** | `data/failure-modes.json` — how Drupal fails silently, one row per failure mode, each with an `evidenceStatus`. |
+| **claimed / measured** | A row's evidence status: `claimed` = model-authored from a session; `measured` = a sweep reproduced the failure AND proved the detection recipe catches it. |
+| **sweep** | A measurement run: pick a catalog row (or a corpus question fixture), reproduce the failure on a live fixture, run the row's detection recipe through the plane tools, record the verdict — including `skipped` and `inconclusive`, which never fold into pass rates. |
+| **record** | One dated, committed JSON file per sweep target in `sweep/records/` — the evidence a `measured` claim must cite. |
+| **gate** | `npm run sweep:gate` — validates every `measured` claim against its records and refuses catalog claims without them. The enforcement layer; the README asserts no status. |
+| **bad patch** | A fixture mutation stored in `sweep/bad-patches/` that deliberately induces a catalog failure mode (a library.yml with a broken CSS category, a module with an undeclared service) — applied, measured, reverted in teardown. |
+| **fixture** | The live Drupal install a sweep runs against: the usagov2021 ddev project, or the dedicated `usagov-sweep-scratch` project for destructive install-order tests. |
 
 ## Why
 

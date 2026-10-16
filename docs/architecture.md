@@ -14,7 +14,8 @@ different freshness, authority, and failure characteristics:
 | **state** | What is true on *this site* right now? | The running site: config, modules, entities, routes | Editing YAML blind, assuming state |
 | **verification** | Did the write actually take effect? | The delivered result, not the commit response | Trusting a 0 exit code / HTTP 200 |
 
-The design principle, borrowed from mosaic-headless: **never trust the
+The design principle, borrowed from mosaic-headless (our predecessor Drupal
+harness project): **never trust the
 commit**. A successful write is not evidence of a working site. Every mutation
 must be followed by a read-back through the verification plane, and the
 verification plane must know Drupal's silent failure modes explicitly.
@@ -72,7 +73,7 @@ per plane (a missing drupal-dev-mcp or drush never removes the other planes).
 
 ## Honest status: claimed vs measured
 
-Following the mosaic-headless discipline, `data/failure-modes.json` carries
+Following the same discipline as the predecessor harness, `data/failure-modes.json` carries
 every row's `evidenceStatus` — `claimed` until graduated to `measured`.
 Graduation is enforced, not asserted: the sweep gate (`npm run sweep:gate`)
 requires a committed record in `sweep/records/` showing that a live sweep
@@ -90,8 +91,8 @@ graduate through the same sweep discipline.
 2. **Sweep the normalizers** against Drush 12 output (status, pm:list,
    config:get in both key and full-object shapes).
 3. **Publish the token price** of each tool against the alternative (reading
-   api.drupal.org, editing YAML blind) — the mosaic-headless pricing table,
-   adapted.
+   api.drupal.org, editing YAML blind) — the pricing-table instrument,
+   adapted from the predecessor harness.
 4. **Grow the state plane** (content entities, routes, roles/permissions,
    applied recipes) once the read surface is measured.
 5. **Guarded write path**: checkout → check (refuse what the catalog says
@@ -100,6 +101,7 @@ graduate through the same sweep discipline.
    [docs/design-layers-plan.md](design-layers-plan.md) — design-aware plane
    extensions plus a sibling design pack; gated behind this ladder.
 7. **Multi-harness distribution**: this SKILL.md is the seed for Cursor rules
-   and Codex/Copilot rule files, mosaic-headless style — same discipline,
+   and Codex/Copilot rule files, as the predecessor harness did — same
+   discipline,
    two transports. First transport exists: `kits/opencode/` (harness
    Phases 1–2, per `docs/OpenCode Agentic Engineering Harness.md`).
