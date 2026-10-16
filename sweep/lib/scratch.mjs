@@ -8,7 +8,7 @@
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import { existsSync, mkdirSync, writeFileSync, readFileSync, rmSync } from "node:fs";
-import { join, dirname } from "node:path";
+import { join, dirname, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const execFileAsync = promisify(execFile);
@@ -20,6 +20,71 @@ export const SCRATCH_PROJECT = process.env.SWEEP_SCRATCH_PROJECT ?? "usagov-swee
 export const SCRATCH_DIR = process.env.SWEEP_SCRATCH_DIR ?? join(dirname(SWEEP_DIR), "..", "usagov-sweep-scratch");
 const SOURCE_DIR = process.env.SWEEP_SITE_SOURCE_DIR ?? "";
 const SCRATCH_URL = process.env.SWEEP_SCRATCH_URL ?? `https://${SCRATCH_PROJECT}.ddev.site`;
+
+// --- Safety boundary -------------------------------------------------------
+// Scratch provisioning is destructive: it can `rmSync` a directory, `ddev
+// remove` a project, and DROP a database. "Scratch" must be an enforced
+// boundary, not a naming convention, so three things gate every destructive
+// step: (1) a pure destination validator, (2) an ownership marker proving the
+// harness created the directory, (3) an explicit fresh flag for re-provision.
+
+/** Written into a scratch dir the moment the harness claims it. */
+const OWNER_MARKER = ".sweep-scratch-owned";
+const REPO_ROOT = resolve(SWEEP_DIR, ".."); // the drupal-dev-planes checkout
+const FIXTURE_SITE = process.env.SWEEP_FIXTURE_SITE ?? "usagov2021";
+
+/**
+ * Pure destination-safety check. Refuses any scratch destination that could be
+ * a real project: a filesystem root, the source checkout (or anything nested
+ * in it / containing it), the drupal-dev-planes repo itself, or a project name
+ * that collides with the main fixture. Returns {ok:true, abs} or {ok:false,
+ * reason}. No filesystem access — unit-testable.
+ */
+export function validateScratchDest({
+  scratchDir,
+  scratchProject,
+  sourceDir,
+  fixtureSite = FIXTURE_SITE,
+  repoRoot = REPO_ROOT,
+}) {
+  if (!scratchDir || typeof scratchDir !== "string") {
+    return { ok: false, reason: "scratch dir is not set" };
+  }
+  const abs = resolve(scratchDir);
+  const repo = resolve(repoRoot);
+  if (abs === sep || abs === resolve(sep)) {
+    return { ok: false, reason: `refusing to use a filesystem root as scratch: ${abs}` };
+  }
+  if (sourceDir) {
+    const src = resolve(sourceDir);
+    if (abs === src || abs.startsWith(src + sep) || src.startsWith(abs + sep)) {
+      return { ok: false, reason: `scratch dir ${abs} overlaps the source checkout ${src}` };
+    }
+  }
+  if (abs === repo || abs.startsWith(repo + sep)) {
+    return { ok: false, reason: `scratch dir ${abs} is inside the drupal-dev-planes repo ${repo}` };
+  }
+  if (scratchProject && fixtureSite && scratchProject === fixtureSite) {
+    return { ok: false, reason: `scratch project '${scratchProject}' collides with the main fixture '${fixtureSite}'` };
+  }
+  return { ok: true, abs };
+}
+
+/** True only if the harness wrote its ownership marker into this directory. */
+export function isHarnessOwned(dir) {
+  try {
+    return existsSync(join(resolve(dir), OWNER_MARKER));
+  } catch {
+    return false;
+  }
+}
+
+/** Claim a scratch dir by writing the ownership marker (idempotent). */
+function claimOwnership(dir) {
+  mkdirSync(dir, { recursive: true });
+  const m = join(dir, OWNER_MARKER);
+  if (!existsSync(m)) writeFileSync(m, `created by drupal-dev-planes sweep harness ${new Date().toISOString()}\n`);
+}
 
 function sh(bin, args, opts = {}) {
   return execFileAsync(bin, args, { timeout: opts.timeoutMs ?? 600_000, ...opts });
@@ -38,6 +103,12 @@ async function step(label, fn, log) {
  */
 export async function provisionScratch(log = () => {}, { fresh = false } = {}) {
   if (!SOURCE_DIR) throw new Error("SWEEP_SITE_SOURCE_DIR must point at the usagov-2021 checkout");
+
+  // Safety boundary: refuse before touching anything if the destination could
+  // be a real project (source checkout, this repo, a fixture-name collision).
+  const dest = validateScratchDest({ scratchDir: SCRATCH_DIR, scratchProject: SCRATCH_PROJECT, sourceDir: SOURCE_DIR });
+  if (!dest.ok) throw new Error(`scratch destination refused: ${dest.reason}`);
+
   const marker = join(SCRATCH_DIR, ".sweep-scratch-installed");
 
   if (!fresh && existsSync(marker)) {
@@ -52,15 +123,28 @@ export async function provisionScratch(log = () => {}, { fresh = false } = {}) {
     log("scratch: SWEEP_SCRATCH_FRESH=1 — removing previous scratch project + dir");
     // Remove by NAME even if the dir is already gone: stale docker volumes
     // from a previous crashed install would otherwise prompt/abort the new
-    // site:install ("You are about to DROP all tables").
+    // site:install ("You are about to DROP all tables"). ddev only removes its
+    // own projects, and the dest validator already ruled out a fixture-name
+    // collision, so this cannot target the working site.
     await sh("ddev", ["remove", "-O", SCRATCH_PROJECT]).catch(() => {});
-    if (existsSync(SCRATCH_DIR)) rmSync(SCRATCH_DIR, { recursive: true, force: true });
+    // Recursive delete is gated on the ownership marker: the harness only
+    // ever rmSync's a directory it created. A pre-existing dir without the
+    // marker is someone else's project — refuse rather than delete it.
+    if (existsSync(SCRATCH_DIR)) {
+      if (!isHarnessOwned(SCRATCH_DIR)) {
+        throw new Error(`refusing to delete ${SCRATCH_DIR}: not harness-owned (no ${OWNER_MARKER}). Remove it manually if it is safe.`);
+      }
+      rmSync(SCRATCH_DIR, { recursive: true, force: true });
+    }
   }
 
   if (!existsSync(SCRATCH_DIR)) {
     await step("local clone (shared objects)", async () =>
       sh("git", ["clone", "--shared", SOURCE_DIR, SCRATCH_DIR], { timeoutMs: 600_000 }), log);
   }
+  // Claim ownership now that the dir exists, so a later fresh re-provision is
+  // allowed to delete it.
+  claimOwnership(SCRATCH_DIR);
 
   if (!existsSync(join(SCRATCH_DIR, ".ddev", "config.yaml"))) {
     await step("ddev config", async () =>
@@ -132,6 +216,11 @@ function readSettingsLocal(path) {
  * minimal install (no config sync).
  */
 export async function recoverToHealthyBase(log = () => {}) {
+  // Defense-in-depth: re-validate before dropping the database. The DROP runs
+  // inside the scratch container (cwd SCRATCH_DIR), so it can only touch the
+  // scratch DB — but never assume the destination is still safe.
+  const dest = validateScratchDest({ scratchDir: SCRATCH_DIR, scratchProject: SCRATCH_PROJECT, sourceDir: SOURCE_DIR });
+  if (!dest.ok) throw new Error(`scratch recovery refused: ${dest.reason}`);
   await step("recover: drop broken db + plain minimal install", async () => {
     await sh("ddev", ["exec", "mysql", "-hdb", "-udb", "-pdb", "-e", "DROP DATABASE IF EXISTS db; CREATE DATABASE db;"], { cwd: SCRATCH_DIR, timeoutMs: 300_000 });
     await sh("ddev", ["exec", "drush", "site:install", "minimal", "--no-interaction"], { cwd: SCRATCH_DIR, timeoutMs: 1_200_000 });
@@ -145,6 +234,12 @@ export async function teardownScratch(log = () => {}, { keep = false } = {}) {
   if (keep) {
     log("scratch: kept (SWEEP_SCRATCH_KEEP=1)");
     return { kept: true };
+  }
+  // Defense-in-depth: validate the project name before removing it.
+  const dest = validateScratchDest({ scratchDir: SCRATCH_DIR, scratchProject: SCRATCH_PROJECT, sourceDir: SOURCE_DIR });
+  if (!dest.ok) {
+    log(`scratch: teardown refused (${dest.reason}) — leaving the project in place`);
+    return { kept: true, refused: dest.reason };
   }
   await sh("ddev", ["remove", "-O", SCRATCH_PROJECT]).catch((e) => {
     log(`scratch: ddev remove failed (${e.message.slice(0, 120)})`);
