@@ -151,7 +151,14 @@ and the sweep instruments measured the result:
 
 ## 7. What retired
 
-The hand-written phpfloor eval in `scripts/expert-local-eval.mjs` is
-superseded by the sweep's phpfloor fixture (B1 retrieval + B2 answerability
-+ `sweep:regression`). The legacy script remains for ad-hoc runs but is no
-longer the standing instrument.
+The six 2026-09-26 ad-hoc eval result files (`data/expert-eval-*.json`,
+`data/small-model-eval-*.json`) are removed from tracking — superseded by
+`sweep/records/`, which carry the full answer texts, model identity, claim
+verdicts, and token/latency data the old 280-char-head files kept only
+partially. Git history preserves them; the findings they carried are
+captured in the corpus ledger's `observed` fields and in this document.
+The legacy scripts (`scripts/expert-local-eval.mjs`,
+`scripts/small-model-eval.mjs`) remain for ad-hoc runs but are no longer
+the standing instruments — the sweep's phpfloor fixture (B1 retrieval +
+B2 answerability + `sweep:regression`) replaces them. Note: running the
+legacy scripts recreates their result files as untracked files in `data/`.
