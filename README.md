@@ -74,9 +74,14 @@ site root are configured.
 | `drush_dispatch` | state | **yes, gated** | Explicit drush invocation; unavailable unless `DRUPAL_AGENT_ALLOW_EXEC=true` |
 | `verify_config` | verification | none | Read back a config object, diff against expected, **verdict first** |
 | `verify_page` | verification | none | Probe a delivered URL: 5xx = dead, critical-error marker = dead, <64-byte 200 = suspicious |
+| `list_views` / `list_menus` / `list_roles` | state | none | Typed reads: views, menus, roles (+permission filter for roles) |
+| `get_watchdog` | state | none | 50 most recent watchdog entries — the post-write check for silent fatals |
+| `check_route` | state | none | Does a route exist for a path pattern / name, and what does it require? |
 | `get_bundle_fields` | state | none | Field definitions for a bundle: name, type, required, cardinality |
 | `create_content` | writes | **yes, gated** | Catalog-checked entity create: refuses unpopulated required fields (`unpopulated-field-fatal`, measured), returns the paired verification contract + declared revert |
 | `verify_entity` | verification | none | Read back an entity and diff against what you intended; **verdict first** |
+| `create_content_type` | writes | **yes, gated** | Create a node type; refuses duplicates; paired verification: `get_bundle_fields` read-back |
+| `add_field` | writes | **yes, gated** | Add storage + instance to a bundle; refuses missing bundle / duplicate field; paired verification: read-back |
 | `delete_content` | writes | **yes, gated** | Delete by id/uuid — the declared revert path for `create_content` |
 | `explain_config` | cross-plane | none | Join: live state value + knowledge evidence for one config key |
 | `list_failure_modes` | cross-plane | none | The failure-mode catalog, with evidence status per row |

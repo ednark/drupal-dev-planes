@@ -52,6 +52,17 @@ export function normalizeFieldDefs(raw: unknown): FieldDef[] {
  * populating a required field took the whole site to HTTP 500, and the
  * commit reported success.
  */
+/**
+ * Structural base fields the write tools set themselves (or that default):
+ * they appear as required in field definitions but are NOT the caller's
+ * responsibility in `fields`. 'type' comes from the bundle parameter,
+ * 'title' from the title parameter, langcode/uuid/revision_* are auto-set.
+ */
+export const STRUCTURAL_BASE_FIELDS = new Set([
+  "type", "langcode", "uuid", "vid",
+  "revision_default", "revision_timestamp", "revision_uid", "revision_log",
+]);
+
 export function missingRequiredValues(
   defs: FieldDef[],
   values: Record<string, unknown>,
@@ -59,6 +70,7 @@ export function missingRequiredValues(
   const gaps: string[] = [];
   for (const def of defs) {
     if (!def.required) continue;
+    if (STRUCTURAL_BASE_FIELDS.has(def.name)) continue;
     if (!(def.name in values)) {
       gaps.push(def.name);
       continue;

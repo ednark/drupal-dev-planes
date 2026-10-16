@@ -28,3 +28,16 @@ export {
   type EntityReadback,
   type EntityType,
 } from "./content.js";
+export {
+  addField,
+  createContentType,
+  isFieldType,
+  nodeTypeExists,
+  normalizeAddFieldResult,
+  normalizeCreateContentTypeResult,
+  type AddFieldPayload,
+  type AddFieldResult,
+  type CreateContentTypePayload,
+  type CreateContentTypeResult,
+  type FieldType,
+} from "./contenttypes.js";

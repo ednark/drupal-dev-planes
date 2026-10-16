@@ -84,6 +84,8 @@ export interface PageProbeResult {
   httpStatus: number;
   byteSize: number;
   detail: string;
+  /** Content assertion (analysis-1 P1): present only when `expected` is given. */
+  expected?: { needle: string; present: boolean };
 }
 
 /**
@@ -95,14 +97,19 @@ export interface PageProbeResult {
 export function interpretPageProbe(
   httpStatus: number,
   body: string,
+  expected?: string,
 ): PageProbeResult {
   const byteSize = Buffer.byteLength(body, "utf8");
+  const assertion = expected
+    ? { needle: expected, present: body.includes(expected) }
+    : undefined;
   if (httpStatus >= 500) {
     return {
       verdict: "server_error",
       httpStatus,
       byteSize,
       detail: "5xx treated as a dead page regardless of body content",
+      expected: assertion,
     };
   }
   if (/The website encountered an unexpected error/i.test(body)) {
@@ -111,6 +118,7 @@ export function interpretPageProbe(
       httpStatus,
       byteSize,
       detail: "Drupal critical-error screen detected",
+      expected: assertion,
     };
   }
   if (httpStatus === 200 && byteSize > 0 && byteSize < 64) {
@@ -119,14 +127,24 @@ export function interpretPageProbe(
       httpStatus,
       byteSize,
       detail: "200 with a very short body — matches the tiny-error-string failure mode",
+      expected: assertion,
     };
   }
-  return { verdict: "alive", httpStatus, byteSize, detail: "page delivered" };
+  return {
+    verdict: "alive",
+    httpStatus,
+    byteSize,
+    detail: assertion && !assertion.present
+      ? "page delivered but the expected content is MISSING — treat as not delivered"
+      : "page delivered",
+    expected: assertion,
+  };
 }
 
 export async function probePage(
   url: string,
   timeoutMs = 10_000,
+  expected?: string,
 ): Promise<PageProbeResult> {
   let response: Response;
   try {
@@ -143,7 +161,7 @@ export async function probePage(
     };
   }
   const body = await response.text();
-  return interpretPageProbe(response.status, body);
+  return interpretPageProbe(response.status, body, expected);
 }
 
 export { loadFailureModes, type FailureMode, type Plane } from "./catalog.js";

@@ -86,7 +86,31 @@ catalog citations now cite the committed records.
 - MCP tool envelopes that fail parsing were silently eaten; `planes.call`
   now returns the raw text and `envelopeDiag` puts it into records.
 
-## 5. Stage D — the closed loop, measured
+## 5. B2 grounding diagnosis (agent-side, investigated not fixed)
+
+Reading drupal-dev-mcp's `packages/agent/src/agent.ts` ask path explains the
+uncited answers without exonerating them:
+
+- The pipeline is correct-by-design: one evidence round (LLM-derived keyword
+  query, retry on empty), then generation under `GROUNDING_RULES` ("Cite
+  every substantive claim with the evidence item's citation_uri"). When
+  answers come back uncited, the 8B model is not complying with the rules,
+  not missing evidence.
+- **Lever 1 — the guidance round is gated**: `isPlacementQuestion()` decides
+  whether the curated guidance corpus is pulled into evidence. The
+  concept-bridge docs are type `guidance`, so non-placement-shaped questions
+  never see them unless the main search already ranked them. Widening the
+  gate (or always including a guidance round) is a one-line upstream change.
+- **Lever 2 — rule mass**: `GROUNDING_RULES` + `DESIGN_DOC_RULES` are a long
+  system prompt; small models demonstrably drop the citation discipline
+  under it (density varies 0 → 0.6 run-to-run on identical prompts). A
+  small-model rule variant (shorter, citation-first) is the next upstream
+  experiment.
+- **Verification lever (ours)**: `sweep:b2` + `sweep:regression` already
+  measure both levers deterministically — any upstream change must flip the
+  recorded uncited/unsupported answers or it didn't work.
+
+## 6. Stage D — the closed loop, measured
 
 The B1 findings drove a corpus intervention in drupal-dev-mcp (2026-10-16),
 and the sweep instruments measured the result:
@@ -125,7 +149,7 @@ and the sweep instruments measured the result:
   issues stay `proposed` — per §5 B3, `fixed` requires retrieval AND
   answerability to pass, and answerability is not yet green.
 
-## 6. What retired
+## 7. What retired
 
 The hand-written phpfloor eval in `scripts/expert-local-eval.mjs` is
 superseded by the sweep's phpfloor fixture (B1 retrieval + B2 answerability

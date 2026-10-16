@@ -5,12 +5,18 @@ import type { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { z } from "zod";
 import { callKnowledgeTool, connectKnowledge } from "@drupal-agent-planes/knowledge";
 import {
+  checkRoute,
+  getWatchdog,
+  listMenus,
+  listRoles,
+  listViews,
   maskSecrets,
   normalizeConfigValue,
   normalizeModules,
   normalizeStatus,
   parseJsonLoose,
   runDrush,
+  WATCHDOG_SEVERITY_NAMES,
 } from "@drupal-agent-planes/state";
 import {
   canonicalize,
@@ -23,12 +29,18 @@ import {
 import { loadConfig, type ServerConfig } from "./config.js";
 import {
   createContent,
+  createContentType,
   deleteContent,
   diffEntityValues,
   fetchFieldDefs,
   missingRequiredValues,
+  nodeTypeExists,
   readbackEntity,
+  addField,
   isEntityType,
+  isFieldType,
+  normalizeCreateContentTypeResult,
+  normalizeAddFieldResult,
   type EntityType,
 } from "@drupal-agent-planes/writes";
 
@@ -355,19 +367,119 @@ async function main(): Promise<void> {
   server.registerTool(
     "verify_page",
     {
-      description: "Verification plane: probe a delivered URL. 5xx = dead, Drupal critical-error marker = dead, 200 under 64 bytes = suspicious.",
+      description: "Verification plane: probe a delivered URL. 5xx = dead, Drupal critical-error marker = dead, 200 under 64 bytes = suspicious. With `expected`, a delivered page MISSING the expected content is treated as not delivered (content assertion).",
       inputSchema: {
         url: z.string().url(),
         timeout_ms: z.number().int().positive().max(30_000).optional(),
+        expected: z.string().min(1).optional(),
       },
       annotations: READ_ANNOTATIONS,
     },
-    async ({ url, timeout_ms }) => {
-      const probe = await probePage(url, timeout_ms ?? 10_000);
+    async ({ url, timeout_ms, expected }) => {
+      const probe = await probePage(url, timeout_ms ?? 10_000, expected);
       const notes = probe.verdict === "alive"
-        ? []
+        ? (probe.expected && !probe.expected.present
+            ? [`content assertion FAILED: "${probe.expected.needle}" is not on the delivered page — do not claim success; see failure mode silent-partial-delivery.`]
+            : [])
         : ["page did not deliver — see failure mode critical-error-page. A successful commit is not evidence of a working site."];
       return textResult(envelope("verification", "ok", probe, { source: "fetch", url }, notes));
+    },
+  );
+
+  // ----- State plane: Stage-B typed reads -----
+
+  server.registerTool(
+    "list_views",
+    {
+      description: "State plane: every view on the site — id, label, status, base table. Read before configuring or creating views.",
+      annotations: READ_ANNOTATIONS,
+    },
+    async () => {
+      const read = await listViews(drushConfig(config));
+      if (!read.ok) {
+        return textResult(envelope("state", "state_unavailable", { stderr: read.stderr }, drushProvenance(config)));
+      }
+      return textResult(envelope("state", "ok", { count: read.value.length, views: read.value }, drushProvenance(config)));
+    },
+  );
+
+  server.registerTool(
+    "list_menus",
+    {
+      description: "State plane: every menu — id, label, description. Read before adding menu links.",
+      annotations: READ_ANNOTATIONS,
+    },
+    async () => {
+      const read = await listMenus(drushConfig(config));
+      if (!read.ok) {
+        return textResult(envelope("state", "state_unavailable", { stderr: read.stderr }, drushProvenance(config)));
+      }
+      return textResult(envelope("state", "ok", { count: read.value.length, menus: read.value }, drushProvenance(config)));
+    },
+  );
+
+  server.registerTool(
+    "list_roles",
+    {
+      description: "State plane: every role with its permission list — read before set_permissions-class writes or access probing.",
+      inputSchema: { permission: z.string().optional() },
+      annotations: READ_ANNOTATIONS,
+    },
+    async ({ permission }) => {
+      const read = await listRoles(drushConfig(config));
+      if (!read.ok) {
+        return textResult(envelope("state", "state_unavailable", { stderr: read.stderr }, drushProvenance(config)));
+      }
+      let roles = read.value;
+      if (permission) roles = roles.filter((r) => r.permissions.includes(permission));
+      return textResult(envelope("state", "ok", { count: roles.length, roles }, drushProvenance(config)));
+    },
+  );
+
+  server.registerTool(
+    "get_watchdog",
+    {
+      description: "State plane: 50 most recent watchdog entries (wid, severity, type, message, timestamp). The post-write check for silent fatals: new error-class entries after a write mean the commit lied.",
+      inputSchema: { min_severity: z.number().int().min(0).max(7).optional() },
+      annotations: READ_ANNOTATIONS,
+    },
+    async ({ min_severity }) => {
+      const read = await getWatchdog(drushConfig(config));
+      if (!read.ok) {
+        return textResult(envelope("state", "state_unavailable", { stderr: read.stderr }, drushProvenance(config)));
+      }
+      let entries = read.value;
+      if (min_severity !== undefined) entries = entries.filter((e) => e.severity <= min_severity);
+      return textResult(envelope("state", "ok", {
+        count: entries.length,
+        entries: entries.map((e) => ({ ...e, severityName: WATCHDOG_SEVERITY_NAMES[e.severity] ?? String(e.severity) })),
+      }, drushProvenance(config), entries.length > 0
+        ? ["watchdog is not empty — check for new entries timestamped after your write before claiming success"]
+        : []));
+    },
+  );
+
+  server.registerTool(
+    "check_route",
+    {
+      description: "State plane: does a route exist for a path pattern (or exact route name), and what does it require? Read before referencing a route.",
+      inputSchema: {
+        pattern: z.string().optional(),
+        name: z.string().optional(),
+      },
+      annotations: READ_ANNOTATIONS,
+    },
+    async ({ pattern, name }) => {
+      if (!pattern && !name) {
+        return textResult(envelope("state", "error", null, drushProvenance(config), ["provide pattern or name"]));
+      }
+      const read = await checkRoute(drushConfig(config), { pattern, name });
+      if (!read.ok) {
+        return textResult(envelope("state", "state_unavailable", { stderr: read.stderr }, drushProvenance(config)));
+      }
+      return textResult(envelope("state", "ok", read.value, drushProvenance(config), read.value.exists
+        ? []
+        : ["no route matched — a reference to a non-existent route is a silent failure at render time"]));
     },
   );
 
@@ -559,6 +671,113 @@ async function main(): Promise<void> {
       }, { ...drushProvenance(config), gated: true }, del.value.deleted > 0
         ? ["deletion reported; if this reverted a create, verify with verify_entity expecting verdict not_found."]
         : ["nothing deleted — check the target ids/uuid."]));
+    },
+  );
+
+  server.registerTool(
+    "create_content_type",
+    {
+      description: "Writes plane: create a node content type (bundle). Precondition: type must not already exist; paired verification is the read-back via get_bundle_fields. GATED.",
+      inputSchema: {
+        bundle: z.string().regex(/^[a-z][a-z0-9_]*$/, "machine name: lowercase letters, digits, underscore"),
+        label: z.string().min(1),
+        description: z.string().optional(),
+      },
+      annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: false, openWorldHint: true },
+    },
+    async ({ bundle, label, description }) => {
+      const gateNote = requireExecGate(config);
+      if (gateNote) {
+        return textResult(envelope("writes", "unavailable", null, drushProvenance(config), gateNote));
+      }
+      // Precondition (read, not guess): the type must not already exist.
+      const exists = await nodeTypeExists(drushConfig(config), bundle);
+      if (!exists.ok) {
+        return textResult(envelope("writes", "state_unavailable", { bundle, stderr: exists.stderr }, drushProvenance(config)));
+      }
+      if (exists.value) {
+        return textResult(envelope("writes", "refused", { bundle }, drushProvenance(config), [
+          `node type '${bundle}' already exists — read it (get_bundle_fields) before writing; a duplicate create is a silent no-op at best`,
+        ]));
+      }
+      const write = await createContentType(drushConfig(config), { bundle, label, description });
+      if (!write.ok) {
+        return textResult(envelope("writes", "state_unavailable", { bundle, stderr: write.stderr }, drushProvenance(config)));
+      }
+      if (write.value.errors.length > 0) {
+        return textResult(envelope("writes", "error", { bundle, errors: write.value.errors }, { ...drushProvenance(config), gated: true }, [
+          "node type save threw — nothing was written successfully; do not claim success.",
+        ]));
+      }
+      return textResult(envelope("writes", "ok", {
+        bundle: write.value.type,
+        revert: { tool: "drush_dispatch", hint: "config delete or node type entity delete — declare the mutation before proceeding" },
+      }, { ...drushProvenance(config), gated: true }, [
+        "Commit reported; delivery NOT verified. Follow with get_bundle_fields (read-back: the bundle must list its base fields) before creating content in it.",
+      ]));
+    },
+  );
+
+  server.registerTool(
+    "add_field",
+    {
+      description: "Writes plane: add a field to a node content type (storage + instance). Precondition: bundle exists and field not already present. Paired verification: get_bundle_fields read-back shows the field with the expected type/required. GATED.",
+      inputSchema: {
+        bundle: z.string().min(1),
+        field_name: z.string().regex(/^field_[a-z0-9_]+$/, "field machine names must start with field_"),
+        field_type: z.enum(["string", "string_long", "text", "text_long", "text_with_summary", "integer", "decimal", "boolean", "datetime", "link", "entity_reference", "list_string", "list_integer", "email", "telephone", "timestamp"]),
+        label: z.string().min(1),
+        required: z.boolean().default(false),
+        cardinality: z.number().int().min(-1).default(1),
+      },
+      annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: false, openWorldHint: true },
+    },
+    async ({ bundle, field_name, field_type, label, required, cardinality }) => {
+      const gateNote = requireExecGate(config);
+      if (gateNote) {
+        return textResult(envelope("writes", "unavailable", null, drushProvenance(config), gateNote));
+      }
+      if (!isFieldType(field_type)) {
+        return textResult(envelope("writes", "refused", { field_type }, drushProvenance(config), [`unsupported field type ${field_type}`]));
+      }
+      // Preconditions: bundle exists, field does not.
+      const typeExists = await nodeTypeExists(drushConfig(config), bundle);
+      if (!typeExists.ok) {
+        return textResult(envelope("writes", "state_unavailable", { bundle, stderr: typeExists.stderr }, drushProvenance(config)));
+      }
+      if (!typeExists.value) {
+        return textResult(envelope("writes", "refused", { bundle }, drushProvenance(config), [
+          `node type '${bundle}' does not exist — creating a field on a missing bundle fatals at the next container rebuild (failure mode undeclared-service-dependency class). Create the type first.`,
+        ]));
+      }
+      const defs = await fetchFieldDefs(drushConfig(config), "node", bundle);
+      if (!defs.ok) {
+        return textResult(envelope("writes", "state_unavailable", { bundle, stderr: defs.stderr }, drushProvenance(config)));
+      }
+      if (defs.value.some((f) => f.name === field_name)) {
+        return textResult(envelope("writes", "refused", { bundle, field_name }, drushProvenance(config), [
+          `field '${field_name}' already exists on '${bundle}' — read it before changing it`,
+        ]));
+      }
+      const write = await addField(drushConfig(config), {
+        bundle, fieldName: field_name, fieldType: field_type, label, required, cardinality,
+      });
+      if (!write.ok) {
+        return textResult(envelope("writes", "state_unavailable", { bundle, stderr: write.stderr }, drushProvenance(config)));
+      }
+      if (write.value.errors.length > 0) {
+        return textResult(envelope("writes", "error", { bundle, errors: write.value.errors }, { ...drushProvenance(config), gated: true }, [
+          "field save threw — check whether the storage was created (half-commit: storage may exist without the instance); do not claim success.",
+        ]));
+      }
+      return textResult(envelope("writes", "ok", {
+        bundle, field: write.value.field,
+      }, { ...drushProvenance(config), gated: true }, [
+        required
+          ? "Commit reported; delivery NOT verified. REQUIRED field: content created without it will be refused by create_content (unpopulated-field-fatal is the measured class this prevents)."
+          : "Commit reported; delivery NOT verified.",
+        "Follow with get_bundle_fields read-back — the field must appear with the expected type and required flag.",
+      ]));
     },
   );
 

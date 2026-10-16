@@ -12,9 +12,9 @@ honest.
 | Plane | Question | Tools |
 |---|---|---|
 | knowledge | What is true in this Drupal version? | `get_index_status`, `search_drupal`, `get_drupal_document` |
-| state | What is true on this site right now? | `get_site_status`, `get_site_config`, `list_site_modules`, `drush_dispatch` (gated) |
-| verification | Did the write actually take effect? | `verify_config`, `verify_page`, `verify_entity` |
-| writes | What may be written, and how is it reverted? | `create_content`, `delete_content` — catalog-checked, gated, paired with their verification recipes |
+| state | What is true on this site right now? | `get_site_status`, `get_site_config`, `list_site_modules`, `list_views`, `list_menus`, `list_roles`, `get_watchdog`, `check_route`, `drush_dispatch` (gated) |
+| verification | Did the write actually take effect? | `verify_config`, `verify_page` (with `expected`), `verify_entity` |
+| writes | What may be written, and how is it reverted? | `create_content`, `create_content_type`, `add_field`, `delete_content` — catalog-checked, gated, paired with their verification recipes |
 
 Cross-plane: `explain_config` (state + knowledge join), `list_failure_modes`
 (the catalog of how Drupal fails silently).
