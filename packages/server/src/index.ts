@@ -162,6 +162,17 @@ function requireExecGate(config: ServerConfig): string[] | null {
     : ["Write tools require DRUPAL_AGENT_ALLOW_EXEC=true in the server env. Surface this to the user instead of attempting a workaround."];
 }
 
+/**
+ * state_unavailable with a recovery hint: an agent seeing only a raw stderr
+ * has no next move. Every state_unavailable response tells it what to check.
+ */
+function stateUnavail(config: ServerConfig, data: unknown, provenance: Record<string, unknown>, notes: string[] = []): Record<string, unknown> {
+  return envelope("state", "state_unavailable", data, provenance, [
+    ...notes,
+    "the state plane cannot reach the site — check DRUSH_BIN / DDEV_PROJECT and that the site's docker/daemon is running; surface this to the user rather than guessing",
+  ]);
+}
+
 function asObject(value: unknown): Record<string, unknown> | null {
   return value !== null && typeof value === "object" && !Array.isArray(value)
     ? (value as Record<string, unknown>)
@@ -255,7 +266,7 @@ async function main(): Promise<void> {
     async () => {
       const result = await runDrush(drushConfig(config), ["status", "--format=json"]);
       if (result.code !== 0) {
-        return textResult(envelope("state", "state_unavailable", { stderr: result.stderr.slice(0, 500) }, drushProvenance(config)));
+        return textResult(stateUnavail(config, { stderr: result.stderr.slice(0, 500) }, drushProvenance(config)));
       }
       return textResult(envelope("state", "ok", normalizeStatus(parseJsonLoose(result.stdout)), drushProvenance(config)));
     },
@@ -271,7 +282,7 @@ async function main(): Promise<void> {
     async ({ key }) => {
       const read = await readConfigObject(config, key);
       if (!read.ok) {
-        return textResult(envelope("state", "state_unavailable", { key, stderr: read.stderr }, drushProvenance(config)));
+        return textResult(stateUnavail(config, { key, stderr: read.stderr }, drushProvenance(config)));
       }
       return textResult(envelope("state", "ok", { key, value: maskSecrets(read.value) }, drushProvenance(config)));
     },
@@ -287,7 +298,7 @@ async function main(): Promise<void> {
     async ({ status }) => {
       const result = await runDrush(drushConfig(config), ["pm:list", "--format=json"]);
       if (result.code !== 0) {
-        return textResult(envelope("state", "state_unavailable", { stderr: result.stderr.slice(0, 500) }, drushProvenance(config)));
+        return textResult(stateUnavail(config, { stderr: result.stderr.slice(0, 500) }, drushProvenance(config)));
       }
       let modules = normalizeModules(parseJsonLoose(result.stdout));
       if (status) modules = modules.filter((m) => m.status === status);
@@ -404,7 +415,7 @@ async function main(): Promise<void> {
     async () => {
       const read = await listViews(drushConfig(config));
       if (!read.ok) {
-        return textResult(envelope("state", "state_unavailable", { stderr: read.stderr }, drushProvenance(config)));
+        return textResult(stateUnavail(config, { stderr: read.stderr }, drushProvenance(config)));
       }
       return textResult(envelope("state", "ok", { count: read.value.length, views: read.value }, drushProvenance(config)));
     },
@@ -419,7 +430,7 @@ async function main(): Promise<void> {
     async () => {
       const read = await listMenus(drushConfig(config));
       if (!read.ok) {
-        return textResult(envelope("state", "state_unavailable", { stderr: read.stderr }, drushProvenance(config)));
+        return textResult(stateUnavail(config, { stderr: read.stderr }, drushProvenance(config)));
       }
       return textResult(envelope("state", "ok", { count: read.value.length, menus: read.value }, drushProvenance(config)));
     },
@@ -435,7 +446,7 @@ async function main(): Promise<void> {
     async ({ permission }) => {
       const read = await listRoles(drushConfig(config));
       if (!read.ok) {
-        return textResult(envelope("state", "state_unavailable", { stderr: read.stderr }, drushProvenance(config)));
+        return textResult(stateUnavail(config, { stderr: read.stderr }, drushProvenance(config)));
       }
       let roles = read.value;
       if (permission) roles = roles.filter((r) => r.permissions.includes(permission));
@@ -453,7 +464,7 @@ async function main(): Promise<void> {
     async ({ min_severity }) => {
       const read = await getWatchdog(drushConfig(config));
       if (!read.ok) {
-        return textResult(envelope("state", "state_unavailable", { stderr: read.stderr }, drushProvenance(config)));
+        return textResult(stateUnavail(config, { stderr: read.stderr }, drushProvenance(config)));
       }
       let entries = read.value;
       if (min_severity !== undefined) entries = entries.filter((e) => e.severity <= min_severity);
@@ -482,7 +493,7 @@ async function main(): Promise<void> {
       }
       const read = await checkRoute(drushConfig(config), { pattern, name });
       if (!read.ok) {
-        return textResult(envelope("state", "state_unavailable", { stderr: read.stderr }, drushProvenance(config)));
+        return textResult(stateUnavail(config, { stderr: read.stderr }, drushProvenance(config)));
       }
       return textResult(envelope("state", "ok", read.value, drushProvenance(config), read.value.exists
         ? []
@@ -506,7 +517,7 @@ async function main(): Promise<void> {
       }
       const read = await findTerm(drushConfig(config), { vocabulary, name });
       if (!read.ok) {
-        return textResult(envelope("state", "state_unavailable", { stderr: read.stderr }, drushProvenance(config)));
+        return textResult(stateUnavail(config, { stderr: read.stderr }, drushProvenance(config)));
       }
       return textResult(envelope("state", "ok", { count: read.value.length, terms: read.value }, drushProvenance(config)));
     },
@@ -531,7 +542,7 @@ async function main(): Promise<void> {
       }
       const read = await fetchFieldDefs(drushConfig(config), parsed.entityType, bundle);
       if (!read.ok) {
-        return textResult(envelope("state", "state_unavailable", { bundle, stderr: read.stderr }, drushProvenance(config)));
+        return textResult(stateUnavail(config, { bundle, stderr: read.stderr }, drushProvenance(config)));
       }
       const required = read.value.filter((f) => f.required).map((f) => f.name);
       return textResult(envelope("state", "ok", {
@@ -582,13 +593,20 @@ async function main(): Promise<void> {
       const provided: Record<string, unknown> = { title, ...fields };
       const gaps = missingRequiredValues(defs.value, provided);
       if (gaps.length > 0) {
+        const gapDefs = defs.value.filter((f) => gaps.includes(f.name));
+        const refGaps = gapDefs.filter((f) => f.type === "entity_reference");
+        const notes = [
+          "Refused by catalog precondition: unpopulated-field-fatal (measured) — creating an entity without required fields took the site to HTTP 500 while the commit reported success.",
+        ];
+        if (refGaps.length > 0) {
+          notes.push("entity_reference fields need a target id: resolve one with find_term (by vocabulary and/or name).");
+          notes.push("If find_term finds no term, the field is UNSATISFIABLE on this site — do not retry; surface this to the user or create the term first.");
+        }
         return textResult(envelope("writes", "refused", {
           bundle,
-          missingRequired: gaps,
+          missingRequired: gapDefs,
           requiredFields: defs.value.filter((f) => f.required).map((f) => f.name),
-        }, drushProvenance(config), [
-          "Refused by catalog precondition: unpopulated-field-fatal (measured) — creating an entity without required fields took the site to HTTP 500 while the commit reported success. Populate the missing fields and retry.",
-        ]));
+        }, drushProvenance(config), notes));
       }
       // Apply.
       const write = await createContent(drushConfig(config), {
@@ -830,7 +848,7 @@ async function main(): Promise<void> {
       }
       const read = await findContent(drushConfig(config), { bundle, title });
       if (!read.ok) {
-        return textResult(envelope("state", "state_unavailable", { stderr: read.stderr }, drushProvenance(config)));
+        return textResult(stateUnavail(config, { stderr: read.stderr }, drushProvenance(config)));
       }
       return textResult(envelope("state", "ok", { count: read.value.length, hits: read.value }, drushProvenance(config)));
     },

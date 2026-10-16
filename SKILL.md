@@ -55,7 +55,7 @@ then `verify_page` on the entity's URL.
 | Add/change a config key | `search_drupal` (what it means, which version) → `get_site_config` (current value) → write via `drush_dispatch` → `verify_config` → `verify_page` |
 | Install/enable a module | `list_site_modules` (already enabled?) → `drush_dispatch` → `list_site_modules` (read-back) |
 | Diagnose "change didn't take" | `list_failure_modes` → run the matching detection recipe (usually `verify_page` + `get_site_config`) |
-| Create content | `get_bundle_fields` (required fields — you must populate them) → `create_content` → `verify_entity` → `verify_page`. `create_content` refuses unpopulated required fields; the refusal is the catalog protecting the site, fix the values and retry |
+| Create content | `find_content` (does it already exist? idempotency is a read) → `get_bundle_fields` (required fields — you must populate them) → `create_content` → `verify_entity` → `verify_page`. `create_content` refuses unpopulated required fields; the refusal includes each field's type — resolve entity_reference targets with `find_term`. If `find_term` finds no term, the field is unsatisfiable on this site: do NOT retry, surface it to the user |
 | "Where does X live / how does X work?" | `explain_config` or `search_drupal` — knowledge plane, no writes |
 | Unfamiliar API/hook/service | `search_drupal` + `get_drupal_document`; check version compatibility and deprecations before writing any code |
 
