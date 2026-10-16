@@ -11,13 +11,22 @@
     "packages/knowledge",
     "packages/state",
     "packages/verify",
+    "packages/writes",
     "packages/server"
   ],
   "scripts": {
-    "build": "npm run build -w @drupal-agent-planes/knowledge -w @drupal-agent-planes/state -w @drupal-agent-planes/verify -w @drupal-agent-planes/server",
+    "build": "npm run build -w @drupal-agent-planes/knowledge -w @drupal-agent-planes/state -w @drupal-agent-planes/verify -w @drupal-agent-planes/writes -w @drupal-agent-planes/server",
     "typecheck": "tsc -p tsconfig.typecheck.json",
     "test": "tsx --test tests/*.test.ts",
     "smoke": "node scripts/smoke.mjs",
+    "sweep:all": "node sweep/runner.mjs all",
+    "sweep:fm": "node sweep/runner.mjs fm",
+    "sweep:corpus": "node sweep/runner.mjs corpus",
+    "sweep:b2": "SWEEP_B2_MODELS=${SWEEP_B2_MODELS:-llama31-8b-16k} node sweep/runner.mjs corpus",
+    "sweep:regression": "node sweep/regression.mjs",
+    "sweep:scratch": "node sweep/runner.mjs scratch",
+    "sweep:gate": "node sweep/gate.mjs",
+    "sweep:report": "node sweep/report.mjs",
     "mcp:start": "node packages/server/dist/index.js",
     "mcp:dev": "tsx packages/server/src/index.ts"
   },

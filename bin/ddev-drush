@@ -2,4 +2,6 @@
 # drush shim for ddev projects: routes a drush invocation into the ddev
 # container. Set DRUSH_BIN to this script and leave DRUPAL_SITE_ROOT unset
 # (the container already knows its own root).
-exec ddev -p usagov2021 exec drush "$@"
+# DDEV_PROJECT selects the project (default usagov2021); the sweep harness's
+# scratch fixtures set DDEV_PROJECT=usagov-sweep-scratch for their server.
+exec ddev -p "${DDEV_PROJECT:-usagov2021}" exec drush "$@"

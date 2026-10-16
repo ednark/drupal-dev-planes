@@ -7,6 +7,8 @@ const ConfigSchema = z.object({
   siteRoot: z.string().optional(),
   drushBin: z.string().default("drush"),
   drushTimeoutMs: z.number().int().positive().max(120_000).default(20_000),
+  /** ddev shim bins re-join args through a container shell. */
+  drushShellJoined: z.boolean().default(false),
   allowExec: z.boolean().default(false),
 });
 
@@ -28,6 +30,9 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): ServerConfig {
     drupalDevMcpEnv,
     siteRoot: env.DRUPAL_SITE_ROOT,
     drushBin: env.DRUSH_BIN ?? "drush",
+    drushShellJoined: env.DRUSH_SHELL_JOINED
+      ? env.DRUSH_SHELL_JOINED === "true"
+      : /ddev/i.test(env.DRUSH_BIN ?? ""),
     allowExec: env.DRUPAL_AGENT_ALLOW_EXEC === "true",
   });
 }

@@ -7,6 +7,13 @@ export interface DrushConfig {
   bin: string;
   root?: string;
   timeoutMs?: number;
+  /**
+   * True when the drush bin routes args through a shell that re-joins them
+   * (ddev shims do: `ddev exec drush ...` is re-parsed by bash inside the
+   * container). Shell-sensitive arguments must then be pre-quoted by the
+   * caller — see phpEval in packages/writes.
+   */
+  shellJoined?: boolean;
 }
 
 export interface DrushResult {
@@ -42,7 +49,11 @@ export async function runDrush(
     return {
       code: typeof err.code === "number" ? err.code : 1,
       stdout: err.stdout ?? "",
-      stderr: err.stderr ?? err.message ?? "drush invocation failed",
+      // An empty stderr hides the real failure ("" is not nullish), so fall
+      // through to the spawn message (ENOENT, ETIMEDOUT, ...) when present.
+      stderr:
+        (err.stderr && err.stderr.length > 0 ? err.stderr : err.message) ??
+        "drush invocation failed",
     };
   }
 }

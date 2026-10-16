@@ -13,10 +13,20 @@ honest.
 |---|---|---|
 | knowledge | What is true in this Drupal version? | `get_index_status`, `search_drupal`, `get_drupal_document` |
 | state | What is true on this site right now? | `get_site_status`, `get_site_config`, `list_site_modules`, `drush_dispatch` (gated) |
-| verification | Did the write actually take effect? | `verify_config`, `verify_page` |
+| verification | Did the write actually take effect? | `verify_config`, `verify_page`, `verify_entity` |
+| writes | What may be written, and how is it reverted? | `create_content`, `delete_content` — catalog-checked, gated, paired with their verification recipes |
 
 Cross-plane: `explain_config` (state + knowledge join), `list_failure_modes`
 (the catalog of how Drupal fails silently).
+
+## The writes plane
+
+`create_content` is the guarded write, not a convenience: it refuses
+catalog-known-bad moves before touching the site, and every successful call
+returns a `revert` declaration (`delete_content` with the target uuid). Never
+work around a refusal with `drush_dispatch` — the refusal is the catalog
+doing its job. After a create: `verify_entity` (verdict-first read-back),
+then `verify_page` on the entity's URL.
 
 ## The three rules
 
@@ -45,6 +55,7 @@ Cross-plane: `explain_config` (state + knowledge join), `list_failure_modes`
 | Add/change a config key | `search_drupal` (what it means, which version) → `get_site_config` (current value) → write via `drush_dispatch` → `verify_config` → `verify_page` |
 | Install/enable a module | `list_site_modules` (already enabled?) → `drush_dispatch` → `list_site_modules` (read-back) |
 | Diagnose "change didn't take" | `list_failure_modes` → run the matching detection recipe (usually `verify_page` + `get_site_config`) |
+| Create content | `get_bundle_fields` (required fields — you must populate them) → `create_content` → `verify_entity` → `verify_page`. `create_content` refuses unpopulated required fields; the refusal is the catalog protecting the site, fix the values and retry |
 | "Where does X live / how does X work?" | `explain_config` or `search_drupal` — knowledge plane, no writes |
 | Unfamiliar API/hook/service | `search_drupal` + `get_drupal_document`; check version compatibility and deprecations before writing any code |
 

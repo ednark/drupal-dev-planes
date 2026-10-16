@@ -21,13 +21,29 @@ import {
   probePage,
 } from "@drupal-agent-planes/verify";
 import { loadConfig, type ServerConfig } from "./config.js";
+import {
+  createContent,
+  deleteContent,
+  diffEntityValues,
+  fetchFieldDefs,
+  missingRequiredValues,
+  readbackEntity,
+  isEntityType,
+  type EntityType,
+} from "@drupal-agent-planes/writes";
 
 // ---------------------------------------------------------------------------
 // Envelope: every response names its plane, its status, and its provenance.
 // ---------------------------------------------------------------------------
 
-type Plane = "knowledge" | "state" | "verification" | "cross-plane";
-type EnvelopeStatus = "ok" | "unavailable" | "state_unavailable" | "knowledge_unavailable" | "error";
+type Plane = "knowledge" | "state" | "verification" | "writes" | "cross-plane";
+type EnvelopeStatus =
+  | "ok"
+  | "unavailable"
+  | "state_unavailable"
+  | "knowledge_unavailable"
+  | "refused"
+  | "error";
 
 function envelope(
   plane: Plane,
@@ -112,7 +128,19 @@ function drushProvenance(config: ServerConfig): Record<string, unknown> {
 }
 
 function drushConfig(config: ServerConfig) {
-  return { bin: config.drushBin, root: config.siteRoot, timeoutMs: config.drushTimeoutMs };
+  return { bin: config.drushBin, root: config.siteRoot, timeoutMs: config.drushTimeoutMs, shellJoined: config.drushShellJoined };
+}
+
+const ENTITY_TYPE_ENUM = ["node", "taxonomy_term", "user", "media", "block_content"] as const;
+
+function parseEntityType(value: string): { ok: true; entityType: EntityType } | { ok: false } {
+  return isEntityType(value) ? { ok: true, entityType: value } : { ok: false };
+}
+
+function requireExecGate(config: ServerConfig): string[] | null {
+  return config.allowExec
+    ? null
+    : ["Write tools require DRUPAL_AGENT_ALLOW_EXEC=true in the server env. Surface this to the user instead of attempting a workaround."];
 }
 
 function asObject(value: unknown): Record<string, unknown> | null {
@@ -343,6 +371,197 @@ async function main(): Promise<void> {
     },
   );
 
+  // ----- Writes plane (guarded semantic writes; gated) -----
+
+  server.registerTool(
+    "get_bundle_fields",
+    {
+      description: "State plane: field definitions for an entity bundle — name, type, required, cardinality. Read before any create/write: required fields you leave empty brick the site (failure mode unpopulated-field-fatal, measured).",
+      inputSchema: {
+        entity_type: z.enum(ENTITY_TYPE_ENUM).default("node"),
+        bundle: z.string().min(1),
+      },
+      annotations: READ_ANNOTATIONS,
+    },
+    async ({ entity_type, bundle }) => {
+      const parsed = parseEntityType(entity_type);
+      if (!parsed.ok) {
+        return textResult(envelope("state", "error", { entity_type }, drushProvenance(config), [`unknown entity type ${entity_type}`]));
+      }
+      const read = await fetchFieldDefs(drushConfig(config), parsed.entityType, bundle);
+      if (!read.ok) {
+        return textResult(envelope("state", "state_unavailable", { bundle, stderr: read.stderr }, drushProvenance(config)));
+      }
+      const required = read.value.filter((f) => f.required).map((f) => f.name);
+      return textResult(envelope("state", "ok", {
+        bundle,
+        count: read.value.length,
+        requiredFields: required,
+        fields: read.value,
+      }, drushProvenance(config), required.length > 0
+        ? [`required fields: ${required.join(", ")} — create_content refuses to write without them`]
+        : []));
+    },
+  );
+
+  server.registerTool(
+    "create_content",
+    {
+      description: "Writes plane: create a content entity through a catalog-checked write — refuses to create an entity with unpopulated required fields (unpopulated-field-fatal, measured), applies, then the result carries the paired verification contract. GATED.",
+      inputSchema: {
+        entity_type: z.enum(ENTITY_TYPE_ENUM).default("node"),
+        bundle: z.string().min(1),
+        title: z.string().min(1),
+        fields: z.record(z.unknown()).default({}),
+        published: z.boolean().default(true),
+      },
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: true,
+        idempotentHint: false,
+        openWorldHint: true,
+      },
+    },
+    async ({ entity_type, bundle, title, fields, published }) => {
+      const gateNote = requireExecGate(config);
+      if (gateNote) {
+        return textResult(envelope("writes", "unavailable", null, drushProvenance(config), gateNote));
+      }
+      const parsed = parseEntityType(entity_type);
+      if (!parsed.ok) {
+        return textResult(envelope("writes", "refused", { entity_type }, drushProvenance(config), [`unknown entity type ${entity_type}`]));
+      }
+      // Catalog precondition (measured row: unpopulated-field-fatal).
+      const defs = await fetchFieldDefs(drushConfig(config), parsed.entityType, bundle);
+      if (!defs.ok) {
+        return textResult(envelope("writes", "state_unavailable", { bundle, stderr: defs.stderr }, drushProvenance(config)));
+      }
+      const provided: Record<string, unknown> = { title, ...fields };
+      const gaps = missingRequiredValues(defs.value, provided);
+      if (gaps.length > 0) {
+        return textResult(envelope("writes", "refused", {
+          bundle,
+          missingRequired: gaps,
+          requiredFields: defs.value.filter((f) => f.required).map((f) => f.name),
+        }, drushProvenance(config), [
+          "Refused by catalog precondition: unpopulated-field-fatal (measured) — creating an entity without required fields took the site to HTTP 500 while the commit reported success. Populate the missing fields and retry.",
+        ]));
+      }
+      // Apply.
+      const write = await createContent(drushConfig(config), {
+        entity_type: parsed.entityType,
+        bundle,
+        title,
+        published,
+        fields,
+      });
+      if (!write.ok) {
+        return textResult(envelope("writes", "state_unavailable", { bundle, stderr: write.stderr }, drushProvenance(config)));
+      }
+      if (write.value.errors.length > 0) {
+        return textResult(envelope("writes", "error", { bundle, errors: write.value.errors }, {
+          ...drushProvenance(config), gated: true,
+        }, ["entity save threw — nothing was written successfully; do not claim success."]));
+      }
+      return textResult(envelope("writes", "ok", {
+        id: write.value.id,
+        uuid: write.value.uuid,
+        bundle: write.value.bundle,
+        revert: { tool: "delete_content", args: { entity_type: entity_type, uuid: write.value.uuid } },
+      }, { ...drushProvenance(config), gated: true }, [
+        "Commit reported; delivery NOT verified. Follow with verify_entity (read-back), then verify_page on the entity's URL, before claiming success.",
+      ]));
+    },
+  );
+
+  server.registerTool(
+    "verify_entity",
+    {
+      description: "Verification plane: read back a content entity and diff against what you intended. Verdict first. Scalar expected values are compared loosely against the first field delta; exact delta arrays compare exactly.",
+      inputSchema: {
+        entity_type: z.enum(ENTITY_TYPE_ENUM).default("node"),
+        id: z.number().int().positive().optional(),
+        uuid: z.string().optional(),
+        expected: z.record(z.unknown()),
+      },
+      annotations: READ_ANNOTATIONS,
+    },
+    async ({ entity_type, id, uuid, expected }) => {
+      const parsed = parseEntityType(entity_type);
+      if (!parsed.ok) {
+        return textResult(envelope("verification", "error", { entity_type }, drushProvenance(config), [`unknown entity type ${entity_type}`]));
+      }
+      if (!id && !uuid) {
+        return textResult(envelope("verification", "error", null, drushProvenance(config), ["provide id or uuid"]));
+      }
+      const read = await readbackEntity(drushConfig(config), parsed.entityType, id ?? null, uuid ?? null);
+      if (!read.ok) {
+        return textResult(envelope("verification", "state_unavailable", { stderr: read.stderr }, drushProvenance(config)));
+      }
+      if (!read.value.found) {
+        return textResult(envelope("verification", "ok", { verdict: "not_found", entity_type, id, uuid }, drushProvenance(config), [
+          "entity does not exist — the write did not take effect, or was never committed.",
+        ]));
+      }
+      const diff = diffEntityValues(read.value, expected);
+      const notes = diff.verdict === "match"
+        ? ["entity matches expected — config/content in place. Still follow with verify_page: delivery is the page, not the row."]
+        : ["diff detected — do not claim success. Fix and re-verify."];
+      return textResult(envelope("verification", "ok", {
+        verdict: diff.verdict,
+        id: read.value.id,
+        uuid: read.value.uuid,
+        bundle: read.value.bundle,
+        label: read.value.label,
+        published: read.value.published,
+        missing: diff.missing,
+        mismatched: diff.mismatched,
+        looseCompared: diff.loose,
+      }, drushProvenance(config), notes));
+    },
+  );
+
+  server.registerTool(
+    "delete_content",
+    {
+      description: "Writes plane: delete content entities by id or uuid — the declared revert path for create_content. GATED.",
+      inputSchema: {
+        entity_type: z.enum(ENTITY_TYPE_ENUM).default("node"),
+        ids: z.array(z.number().int().positive()).optional(),
+        uuid: z.string().optional(),
+      },
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: true,
+        idempotentHint: true,
+        openWorldHint: true,
+      },
+    },
+    async ({ entity_type, ids, uuid }) => {
+      const gateNote = requireExecGate(config);
+      if (gateNote) {
+        return textResult(envelope("writes", "unavailable", null, drushProvenance(config), gateNote));
+      }
+      const parsed = parseEntityType(entity_type);
+      if (!parsed.ok) {
+        return textResult(envelope("writes", "refused", { entity_type }, drushProvenance(config), [`unknown entity type ${entity_type}`]));
+      }
+      if ((!ids || ids.length === 0) && !uuid) {
+        return textResult(envelope("writes", "refused", null, drushProvenance(config), ["provide ids or uuid — refusing to delete without an explicit target"]));
+      }
+      const del = await deleteContent(drushConfig(config), parsed.entityType, ids ?? [], uuid ?? null);
+      if (!del.ok) {
+        return textResult(envelope("writes", "state_unavailable", { stderr: del.stderr }, drushProvenance(config)));
+      }
+      return textResult(envelope("writes", del.value.deleted > 0 && del.value.errors.length === 0 ? "ok" : "error", {
+        deleted: del.value.deleted,
+        errors: del.value.errors,
+      }, { ...drushProvenance(config), gated: true }, del.value.deleted > 0
+        ? ["deletion reported; if this reverted a create, verify with verify_entity expecting verdict not_found."]
+        : ["nothing deleted — check the target ids/uuid."]));
+    },
+  );
+
   // ----- Cross-plane -----
 
   server.registerTool(
@@ -440,7 +659,7 @@ async function main(): Promise<void> {
     "list_failure_modes",
     {
       description: "Cross-plane: the Drupal silent-failure-mode catalog with per-row evidence status (claimed until swept).",
-      inputSchema: { plane: z.enum(["knowledge", "state", "verification", "cross-plane"]).optional() },
+      inputSchema: { plane: z.enum(["knowledge", "state", "verification", "writes", "cross-plane"]).optional() },
       annotations: READ_ANNOTATIONS,
     },
     async ({ plane }) => {
