@@ -6,10 +6,15 @@
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import { dirname, join } from "node:path";
 
 const SITE_URL = "https://usagov2021.ddev.site";
 const LIVE_BASE = "https://www.usa.gov";
-const USWDS_REPO = "/Users/ednark/Projects/usagov-2021";
+// Ad-hoc bring-up driver: the fixture checkout is env-driven (SWEEP_SITE_SOURCE_DIR),
+// defaulting to the sibling usagov-2021 checkout wherever both repos sit side by side.
+const REPO_ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
+const USWDS_REPO = process.env.SWEEP_SITE_SOURCE_DIR ?? join(dirname(REPO_ROOT), "usagov-2021");
 const CANDIDATES = [
   "/about-the-us",
   "/passport",

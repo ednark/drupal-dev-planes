@@ -16,15 +16,19 @@
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import { writeFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import { dirname, join } from "node:path";
 import { QUESTIONS, score } from "./eval-questions.mjs";
 
 const TAG = process.env.EVAL_TAG ?? "local-model";
 const DEPTH = process.env.EVAL_DEPTH ?? "ask";
 const ONLY_IDS = process.env.EVAL_IDS ? process.env.EVAL_IDS.split(",") : null;
 // Legacy ad-hoc script — the standing instrument is sweep/b2 (answerability
-// matrix). Path now env-driven; defaults to the sibling checkout.
+// matrix). Path is env-driven; the fallback resolves the sibling checkout
+// relative to this repo (works wherever both repos sit side by side).
+const REPO_ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const DRUPAL_DEV_MCP = process.env.DRUPAL_DEV_MCP_SERVER ??
-  "/Users/ednark/Projects/drupal/drupal-dev-mcp/packages/server/dist/index.js";
+  join(dirname(REPO_ROOT), "drupal-dev-mcp", "packages", "server", "dist", "index.js");
 
 // ---------------------------------------------------------------------------
 // Connect DIRECTLY to drupal-dev-mcp (the expert tool is its surface, not
@@ -38,7 +42,7 @@ const transport = new StdioClientTransport({
   env: {
     PATH: process.env.PATH,
     HOME: process.env.HOME,
-    DRUPAL_MCP_INDEX_ROOT: process.env.DRUPAL_MCP_INDEX_ROOT ?? "/Users/ednark/Projects/drupal/drupal-dev-mcp/data/index",
+    DRUPAL_MCP_INDEX_ROOT: process.env.DRUPAL_MCP_INDEX_ROOT ?? join(dirname(REPO_ROOT), "drupal-dev-mcp", "data", "index"),
     OPENAI_API_KEY: process.env.OPENAI_API_KEY ?? "ollama",
     OPENAI_BASE_URL: process.env.OPENAI_BASE_URL ?? "http://localhost:11434/v1",
     OPENAI_AGENT_MODEL: process.env.OPENAI_AGENT_MODEL ?? "llama31-8b-16k",
