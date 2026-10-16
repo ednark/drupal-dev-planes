@@ -1,29 +1,45 @@
 # drupal-dev-planes
 
-A unified three-plane MCP interface for Drupal development agents:
+The working harness for Drupal development agents. One MCP server with four
+planes — **knowledge**, **state**, **verification**, **guarded writes** —
+built around a single rule borrowed from mosaic-headless:
+
+> **Never trust the commit.** An exit code of 0 is not evidence of a working
+> site.
 
 - **knowledge** — what is true in a given Drupal version. Composed from
   [drupal-dev-mcp](https://github.com/ednark/drupal-dev-mcp), unchanged: a
   versioned, cited, closed-world evidence index. This repo runs it as a child
   MCP server and proxies a minimal subset of its tools.
-- **state** — what is true on *this site* right now. Drush-backed, normalized,
-  secret-masked reads of the running site's config and modules.
-- **verification** — did the write actually take effect? Read-back diffs and
-  page probes built around one rule borrowed from mosaic-headless:
-  **never trust the commit**. An exit code of 0 is not evidence of a working
-  site.
+- **state** — what is true on *this site* right now. Drush-backed, typed,
+  secret-masked reads: config, modules, views, menus, roles, watchdog,
+  routes, field definitions, content.
+- **verification** — did the write actually take effect? Read-back diffs,
+  page probes with content assertions, and entity diffs. Verdict first.
+- **writes** — the only side-effecting plane, gated and catalog-checked:
+  semantic tools (`create_content`, `create_content_type`, `add_field`,
+  `set_permissions`, `install_module`, `place_block`) that refuse what the
+  failure-mode catalog says breaks, apply, and return their paired
+  verification recipe and declared revert.
 
-Plus `data/failure-modes.json`: a Drupal failure-mode catalog where every row
-is honest about its evidence status (`claimed` until swept against a live
-install and graduated to `measured`).
+Plus `data/failure-modes.json`: a Drupal silent-failure catalog where every
+row is honest about its evidence (`claimed` until a sweep reproduces the
+failure and proves the detection recipe catches it), and `sweep/`: the
+instrument that makes those claims mechanical.
 
 ## Why
 
-An agent doing Drupal work fails by conflating three kinds of truth: it edits
-YAML blind (guessing state from stale training data), and trusts a successful
-commit. This server keeps the planes separate, labels every response with its
-plane and provenance, degrades gracefully per plane, and pairs every write
-with a verification recipe. See [docs/architecture.md](docs/architecture.md).
+An agent doing Drupal work fails by conflating different kinds of truth: it
+edits YAML blind (guessing state from stale training data), and trusts a
+successful commit. The measured case in point — `pm:enable` of a module with
+an undeclared dependency **fatals at container compile and still writes the
+module into `core.extension`**; the next cache rebuild is what dies. A
+failed command is not the dangerous artifact; the state it leaves behind is.
+
+This server keeps the planes separate, labels every response with its plane
+and provenance, degrades gracefully per plane, refuses writes the catalog
+says break, and pairs every write with its verification recipe.
+See [docs/architecture.md](docs/architecture.md).
 
 ## Quick start
 
@@ -34,9 +50,9 @@ npm test
 npm run mcp:start
 ```
 
-The server runs on stdio. Every tool works standalone; the knowledge plane
-activates when drupal-dev-mcp is configured, the state plane when drush and a
-site root are configured.
+The server runs on stdio. Every plane works standalone: knowledge activates
+when drupal-dev-mcp is configured, state when drush (and a ddev project, if
+you use the shim) is configured, writes when the exec gate is on.
 
 ## MCP client configuration
 
@@ -59,95 +75,138 @@ site root are configured.
 }
 ```
 
-`DRUPAL_DEV_MCP_ARGS` is comma- or space-separated (quote-free).
+Notes:
+
+- `DRUPAL_DEV_MCP_ARGS` is comma- or space-separated (quote-free).
+- **ddev**: if `DRUSH_BIN` points at a ddev shim (see `bin/ddev-drush`),
+  set `DDEV_PROJECT` in the env to select the project, and keep
+  `DRUPAL_SITE_ROOT` unset — the container knows its own root.
+- **`DRUSH_SHELL_JOINED`**: ddev shims re-join drush arguments through a
+  container bash. When detected (any `ddev` in `DRUSH_BIN`), the plane tools
+  quote-encode their eval snippets so payloads survive the container shell;
+  override with `DRUSH_SHELL_JOINED=false|true`.
+- **`DRUSH_TIMEOUT_MS`**: per-command timeout (default 20s; sweeps and
+  installs need more via the `timeout_ms` tool argument, capped at 120s).
+- Keep `DRUPAL_AGENT_ALLOW_EXEC=false` in unattended clients — it gates the
+  entire writes plane.
 
 ## Tools
 
-| Tool | Plane | Side effects | Does |
-|---|---|---|---|
-| `get_index_status` | knowledge | none | drupal-dev-mcp build readiness; cite `builtAt` when freshness matters |
-| `search_drupal` | knowledge | none | Cited evidence search across the versioned index |
-| `get_drupal_document` | knowledge | none | Exact indexed text, for verifying citations without re-searching |
-| `get_site_status` | state | none | Normalized `drush status` (versions, root, bootstrap) |
-| `get_site_config` | state | none | Normalized `drush config:get`, secrets masked |
-| `list_site_modules` | state | none | Normalized `drush pm:list` |
-| `drush_dispatch` | state | **yes, gated** | Explicit drush invocation; unavailable unless `DRUPAL_AGENT_ALLOW_EXEC=true` |
-| `verify_config` | verification | none | Read back a config object, diff against expected, **verdict first** |
-| `verify_page` | verification | none | Probe a delivered URL: 5xx = dead, critical-error marker = dead, <64-byte 200 = suspicious |
-| `list_views` / `list_menus` / `list_roles` | state | none | Typed reads: views, menus, roles (+permission filter for roles) |
-| `get_watchdog` | state | none | 50 most recent watchdog entries — the post-write check for silent fatals |
-| `check_route` | state | none | Does a route exist for a path pattern / name, and what does it require? |
-| `get_bundle_fields` | state | none | Field definitions for a bundle: name, type, required, cardinality |
-| `create_content` | writes | **yes, gated** | Catalog-checked entity create: refuses unpopulated required fields (`unpopulated-field-fatal`, measured), returns the paired verification contract + declared revert |
-| `verify_entity` | verification | none | Read back an entity and diff against what you intended; **verdict first** |
-| `create_content_type` | writes | **yes, gated** | Create a node type; refuses duplicates; paired verification: `get_bundle_fields` read-back |
-| `add_field` | writes | **yes, gated** | Add storage + instance to a bundle; refuses missing bundle / duplicate field; paired verification: read-back |
-| `delete_content` | writes | **yes, gated** | Delete by id/uuid — the declared revert path for `create_content` |
-| `explain_config` | cross-plane | none | Join: live state value + knowledge evidence for one config key |
-| `list_failure_modes` | cross-plane | none | The failure-mode catalog, with evidence status per row |
-
 Every response carries `plane`, `status`, `data` (verdict-first where a
 verdict exists), `notes` (pointers to failure modes and next verification
-steps), and `provenance`.
+steps — the verification contract, not decoration), and `provenance`.
+
+### knowledge (proxied from drupal-dev-mcp)
+
+| Tool | Side effects | Does |
+|---|---|---|
+| `get_index_status` | none | index build readiness; cite `builtAt` when freshness matters |
+| `search_drupal` | none | cited evidence search across the versioned index |
+| `get_drupal_document` | none | exact indexed text — verify a citation without re-searching |
+
+### state
+
+| Tool | Side effects | Does |
+|---|---|---|
+| `get_site_status` | none | normalized `drush status` (versions, root, bootstrap) |
+| `get_site_config` | none | `drush config:get`, secrets masked |
+| `list_site_modules` | none | normalized `drush pm:list` |
+| `list_views` / `list_menus` | none | every view / menu, typed |
+| `list_roles` | none | every role with its permission list; optional permission filter |
+| `get_watchdog` | none | 50 newest watchdog entries, severity-filterable — the post-write check for silent fatals |
+| `check_route` | none | does a route exist for a path pattern / name, and what does it require |
+| `get_bundle_fields` | none | field definitions for a bundle: type, required, cardinality |
+| `find_content` / `find_term` | none | locate content nodes / taxonomy terms — the reads that make writes idempotent and resolve entity_reference targets |
+| `drush_dispatch` | **yes, gated** | explicit drush invocation; the escape hatch — never route around a refusal with it |
+
+### verification
+
+| Tool | Side effects | Does |
+|---|---|---|
+| `verify_config` | none | read back a config object, subset-diff against expected, **verdict first** |
+| `verify_page` | none | probe a delivered URL: 5xx = dead, critical-error marker = dead, <64-byte 200 = suspicious; with `expected`, a page missing the expected content is **not delivered** |
+| `verify_entity` | none | read back an entity and diff against what you intended; scalar shorthand against field deltas |
+
+### writes (gated)
+
+| Tool | Side effects | Refuses (precondition) | Paired verification |
+|---|---|---|---|
+| `create_content` | yes | unpopulated required fields (`unpopulated-field-fatal`, measured) | `verify_entity` read-back + `verify_page`; returns declared `revert` |
+| `create_content_type` | yes | duplicate type | `get_bundle_fields` read-back |
+| `add_field` | yes | missing bundle, duplicate field | `get_bundle_fields` read-back |
+| `set_permissions` | yes | missing role, unknown permission | `list_roles` read-back |
+| `install_module` | yes | missing dependencies, missing service references, already enabled — the measured install-crash class | `list_site_modules` read-back; half-commit reported with the repair hint |
+| `place_block` | yes | theme/region/id | `verify_page` with `expected` |
+| `configure_display` | yes | formatter required unless hidden | read-back performed in-tool |
+| `delete_content` | yes | no explicit target | `verify_entity` expecting `not_found` |
 
 ## The routing discipline
 
-The matching agent skill (this repo's `SKILL.md`) encodes three rules:
+The matching agent skill (`SKILL.md`) encodes the rules:
 
-1. **Never write config from memory.** Consult the knowledge plane before the
-   state plane.
-2. **Never assume state.** Read it (`get_site_config`, `list_site_modules`),
-   don't infer it from what you wrote earlier.
-3. **Never trust the commit.** After any write through `drush_dispatch`,
-   verify through `verify_config` and/or `verify_page` before claiming
-   success — and treat a plain "config imported" as unverified delivery.
+1. **Never write config from memory.** Consult the knowledge plane before
+   the state plane. Your training data is not a Drupal version.
+2. **Never assume state.** Read it; don't infer it from what you wrote
+   earlier in the session.
+3. **Never trust the commit.** After any write, run its paired verification
+   before claiming success — and treat "config imported" as unverified
+   delivery.
+4. **Never route around a refusal.** A precondition refusal is the catalog
+   doing its job; fix the cause, don't reach for `drush_dispatch`.
+
+## The failure-mode catalog and the sweep harness
+
+`data/failure-modes.json` records how Drupal fails silently — with per-row
+`evidenceStatus`. Graduation is enforced, not asserted: `sweep/` contains
+the instrument that reproduces each failure on a live fixture, proves the
+detection recipe catches it, and writes a dated record. The gate
+(`npm run sweep:gate`) refuses catalog claims whose records don't exist —
+`skipped` and `inconclusive` verdicts never fold into pass rates.
+
+```bash
+npm run sweep:all        # failure-mode + corpus targets (fixture required)
+npm run sweep:scratch    # A2 install-crash sweeps on a dedicated ddev project
+npm run sweep:b2         # answerability matrix (model-server required)
+npm run sweep:regression # recorded answers as claim-support fixtures
+npm run sweep:gate       # the claims-vs-records check
+npm run sweep:report     # pass rates + token-price table
+```
+
+Run adjacent: see [sweep/README.md](sweep/README.md) for
+the environment matrix. Findings from the live runs are consolidated in
+[docs/analysis-3-sweep-findings.md](docs/analysis-3-sweep-findings.md).
 
 ## Harness kit
 
-The execution plan for the remaining layers (sweep harness, state widening,
-content verification, guarded writes, knowledge niche, reversibility, design
-layers) is [docs/site-builder-implementation-plan.md](docs/site-builder-implementation-plan.md).
-
-`kits/opencode/` ships the agentic engineering harness (Phases 1–2) from
-[docs/OpenCode Agentic Engineering Harness.md](docs/OpenCode%20Agentic%20Engineering%20Harness.md)
-as an installable OpenCode V2 kit — `lead` agent, protected-test subagents,
-slash commands, baseline permissions, and `.agent/` state files. Its agents
-bind to the three rules above. Install into a site project with
+`kits/opencode/` ships an installable OpenCode V2 agentic-engineering
+harness — `lead` agent, protected-test subagents, slash commands, baseline
+permissions, and `.agent/` state files — whose agents bind to the routing
+discipline above. Install into a site project with
 `kits/opencode/install.sh <project-dir>`.
+See [docs/OpenCode Agentic Engineering Harness.md](docs/OpenCode%20Agentic%20Engineering%20Harness.md).
 
-## Honest status
+## Documentation
 
-- **Sweep harness: Phases 1–4 COMPLETE and gate green (2026-10-16).** All 11
-  measured failure-mode rows are backed by committed sweep records: three
-  verified against the live usagov2021 fixture (including a fresh
-  install-crash reproduction of the undeclared `file.repository` dependency
-  on the dedicated `usagov-sweep-scratch` scratch project), and the corpus
-  rows measured across B1 retrieval (8 fixtures) and B2 answerability
-  (llama31-8b-16k, with claim-support regression fixtures). `gate --apply`
-  writes ledger proposals for human review; `sweep:report` emits the
-  token-price table. Five cheap A1 rows remain `claimed` until their
-  instruments are added. See `sweep/records/`. Findings consolidated in
-  [docs/analysis-3-sweep-findings.md](docs/analysis-3-sweep-findings.md).
-- **Stage D loop closed (2026-10-16):** the B1 concept-bridge remedy (new
-  curated `drupal-concept-bridge-guidance` corpus in drupal-dev-mcp)
-  flipped corpus retrieval from 4 fails to **8/8 pass**, including rank-1
-  hits on the raw plain-language questions. B2 measures the remaining gap
-  honestly: synthesis grounding at 8B stays variance-dominated even with
-  retrieval fixed.
-- The **writes plane (Slice 1)** is implemented and unit-tested
-- The **writes plane (Slice 1)** is implemented and unit-tested
-  (`create_content`, `get_bundle_fields`, `verify_entity`, `delete_content`):
-  the required-field precondition is catalog-backed (`unpopulated-field-fatal`
-  is measured), but the new eval-based normalizers are **not yet swept**
-  against a live install — see
-  [docs/site-builder-implementation-plan.md](docs/site-builder-implementation-plan.md).
-- The failure-mode catalog is **seeded, not swept**: every row is
-  `evidenceStatus: "claimed"`. A row graduates only after a live-site sweep
-  reproduces the failure and proves the detection recipe catches it.
-- The drush normalizers are written defensively against Drush 12 output shapes
-  and are not yet swept. `verify_page`'s thresholds (64-byte floor, marker
-  string) are adapted from mosaic-headless's measured practice and should be
-  re-measured against Drupal's actual critical-error screen.
+| Doc | What it is |
+|---|---|
+| [docs/architecture.md](docs/architecture.md) | the four-plane design, response envelope, honest status mechanism |
+| [docs/site-builder-implementation-plan.md](docs/site-builder-implementation-plan.md) | the seven-layer plan from here to a site-builder |
+| [docs/sweep-harness-plan.md](docs/sweep-harness-plan.md) | the sweep families, gate rules, phases |
+| [docs/analysis-1-conclusions.md](docs/analysis-1-conclusions.md) | the first live bring-up: what the planes caught, what they missed |
+| [docs/analysis-2-community-research.md](docs/analysis-2-community-research.md) | the community landscape (harness engineering, self-correction literature) around this design |
+| [docs/analysis-3-sweep-findings.md](docs/analysis-3-sweep-findings.md) | consolidated findings from the live sweep runs |
+| [docs/design-layers-plan.md](docs/design-layers-plan.md) | where Design/UI/UX verification will sit |
+| [docs/OpenCode Agentic Engineering Harness.md](docs/OpenCode%20Agentic%20Engineering%20Harness.md) | the harness methodology the kit implements |
+
+## Status
+
+Status is not asserted here. The enforcement layer tracks it:
+
+- `npm run sweep:gate` — every `measured` catalog claim must be backed by a
+  committed record; violations exit 1.
+- `sweep/records/` — the dated, machine-generated evidence.
+- drupal-dev-mcp's `data/corpus-issues.json` — corpus findings; sweeps write
+  proposals, humans promote.
 
 ## License
 
