@@ -16,8 +16,8 @@ honest.
 | verification | Did the write actually take effect? | `verify_config`, `verify_page` (with `expected`), `verify_entity` |
 | writes | What may be written, and how is it reverted? | `create_content`, `create_content_type`, `add_field`, `delete_content` — catalog-checked, gated, paired with their verification recipes |
 
-Cross-plane: `explain_config` (state + knowledge join), `list_failure_modes`
-(the catalog of how Drupal fails silently).
+Cross-plane: `list_failure_modes` (the catalog of how Drupal fails silently),
+`check_claim_support` (does cited evidence actually support the claims?).
 
 ## The writes plane
 
@@ -56,7 +56,7 @@ then `verify_page` on the entity's URL.
 | Install/enable a module | `list_site_modules` (already enabled?) → `drush_dispatch` → `list_site_modules` (read-back) |
 | Diagnose "change didn't take" | `list_failure_modes` → run the matching detection recipe (usually `verify_page` + `get_site_config`) |
 | Create content | `find_content` (does it already exist? idempotency is a read) → `get_bundle_fields` (required fields — you must populate them) → `create_content` → `verify_entity` → `verify_page`. `create_content` refuses unpopulated required fields; the refusal includes each field's type — resolve entity_reference targets with `find_term`. If `find_term` finds no term, the field is unsatisfiable on this site: do NOT retry, surface it to the user |
-| "Where does X live / how does X work?" | `explain_config` or `search_drupal` — knowledge plane, no writes |
+| "Where does X live / how does X work?" | `search_drupal` — knowledge plane, no writes |
 | Unfamiliar API/hook/service | `search_drupal` + `get_drupal_document`; check version compatibility and deprecations before writing any code |
 
 ## Token discipline

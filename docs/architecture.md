@@ -51,7 +51,6 @@ evidence, closed world); this repo owns composition and cross-plane joins.
 | `drush_dispatch` | state | **destructive, gated** | Explicit drush invocation; unavailable unless `DRUPAL_AGENT_ALLOW_EXEC=true` |
 | `verify_config` | verification | read-only | Read back a config object, diff against expected, verdict first |
 | `verify_page` | verification | read-only | Probe a delivered URL: 5xx = dead, critical-error marker = dead, <64-byte 200 = suspicious |
-| `explain_config` | cross-plane | read-only, open-world | Join: live state value + knowledge evidence for one config key |
 | `list_failure_modes` | cross-plane | read-only | The failure-mode catalog with evidence status per row |
 
 ## Response envelope

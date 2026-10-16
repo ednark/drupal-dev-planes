@@ -54,9 +54,6 @@ log(`  drupal=${status.data?.drupalVersion} bootstrap=${status.data?.bootstrap}`
 const bundleConfig = await call("get_site_config", { key: "node.type.basic_page" });
 log(`  bundle basic_page exists: ${JSON.stringify(bundleConfig.data?.value?.name ?? bundleConfig.data?.value?.label ?? "?")}`);
 
-const explain = await call("explain_config", { key: "node.type.basic_page", drupal_version: "10.6" });
-log(`  explain_config join: state=${!!explain.data?.state} knowledge=${!!explain.data?.knowledge}`);
-
 const knowledge = await call("search_drupal", {
   query: "create node programmatically Node::create save path alias",
   drupal_version: "10.6",

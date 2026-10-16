@@ -205,7 +205,7 @@ See [docs/OpenCode Agentic Engineering Harness.md](docs/OpenCode%20Agentic%20Eng
 ```
 packages/
   knowledge/   knowledge plane: MCP client of drupal-dev-mcp (thin proxy)
-  server/      the MCP server: registers every tool, owns the response envelope
+  server/      the MCP server: shared.ts (envelope + transport) + tools/<plane>.ts
   state/       state plane: drush-backed reads + the shared php:eval transport
   verify/      verification plane: page probes, config/entity diffs, claim support
   writes/      writes plane: guarded content/type/field/permission/module/block ops
@@ -214,7 +214,7 @@ kits/opencode/ installable OpenCode harness (agents, commands, permissions)
 data/          the failure-mode catalog (read by the server + the gate)
 bin/           ddev drush shim
 docs/          plans, architecture, dated analyses
-tests/         unit tests per plane + sweep instruments
+tests/         unit tests, one file per plane or instrument
 ```
 
 ## Documentation
