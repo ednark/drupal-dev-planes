@@ -1,0 +1,44 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  // Merge into the project's opencode.jsonc (or use as the starting file).
+  // Global permissions apply before agent rules; the last matching rule wins.
+  "default_agent": "lead",
+  "permissions": [
+    // broad denies first
+    { "action": "shell", "resource": "*", "effect": "ask" },
+    { "action": "shell", "resource": "git push*", "effect": "deny" },
+    { "action": "shell", "resource": "rm -rf*", "effect": "deny" },
+    { "action": "read", "resource": "**/.env*", "effect": "deny" },
+    // narrow read-only allows
+    { "action": "shell", "resource": "git status", "effect": "allow" },
+    { "action": "shell", "resource": "git diff*", "effect": "allow" },
+    { "action": "shell", "resource": "git log*", "effect": "allow" },
+    { "action": "shell", "resource": "git tag", "effect": "allow" },
+    { "action": "shell", "resource": "ddev status*", "effect": "allow" },
+    // protected surfaces
+    { "action": "edit", "resource": "AGENTS.md", "effect": "ask" },
+    { "action": "edit", "resource": "docs/specs/**", "effect": "ask" },
+    { "action": "edit", "resource": ".agent/ledger.md", "effect": "ask" }
+  ],
+  "agents": {
+    "lead": {
+      "permissions": [
+        { "action": "subagent", "resource": "*", "effect": "deny" },
+        { "action": "subagent", "resource": "test-writer", "effect": "allow" },
+        { "action": "subagent", "resource": "coder", "effect": "allow" },
+        { "action": "subagent", "resource": "reviewer", "effect": "allow" },
+        { "action": "subagent", "resource": "explore", "effect": "allow" },
+        { "action": "edit", "resource": "tests/**", "effect": "ask" },
+        { "action": "edit", "resource": "web/modules/custom/*/tests/**", "effect": "ask" }
+      ]
+    }
+  },
+  // Compaction is global in OpenCode (applies to every session, including
+  // subagents). State lives in files for exactly this reason: the summary
+  // is lossy, .agent/ and docs/specs/ are the record.
+  "compaction": {
+    "auto": true,
+    "keep": { "tokens": 24000 },
+    "buffer": 16000
+  }
+}
