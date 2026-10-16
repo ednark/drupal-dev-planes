@@ -1,0 +1,59 @@
+{
+  "sweepId": "fm-half-install-state",
+  "family": "failure-mode",
+  "target": "half-install-state",
+  "startedAt": "2026-10-16T16:37:22.526Z",
+  "finishedAt": "2026-10-16T16:37:26.828Z",
+  "fixture": {
+    "site": "usagov-sweep-scratch",
+    "url": "https://usagov-sweep-scratch.ddev.site",
+    "drupal": "10.6",
+    "scratch": true
+  },
+  "mutations": [
+    {
+      "kind": "stub-module",
+      "detail": "copy sweep_stub_dep (service references non-existent sweep.missing_service) into the scratch site, then pm:enable it (bricks bootstrap)",
+      "reverted": true
+    },
+    {
+      "kind": "harness-recipe",
+      "detail": "stage the harness repair recipe (sweep/recipes/repair-core-extension.php) into the scratch at scripts/",
+      "reverted": true
+    }
+  ],
+  "reproduce": {
+    "verdict": "pass",
+    "detail": "pm:enable stub exit=1, stderr= In CheckExceptionOnInvalidReferenceBehaviorPass.php line 119:                                                                                   The s; bootstrap=ok, pm:list=ok (bricked=true)"
+  },
+  "detect": {
+    "verdict": "pass",
+    "tool": "repair recipe (ddev exec php, PDO-direct) + cr + get_site_status + list_site_modules",
+    "detail": "repair exit=0 \"removed sweep_stub_dep; enabled modules now: 14\", cr exit=0, bootstrap=ok, pm:list=ok (recovery recipe: all four must be green)",
+    "outcomes": [
+      {
+        "step": "repair-core-extension",
+        "exitCode": 0,
+        "required": true
+      },
+      {
+        "step": "cr",
+        "exitCode": 0,
+        "required": true
+      },
+      {
+        "step": "get_site_status",
+        "ok": true,
+        "required": true
+      },
+      {
+        "step": "list_site_modules",
+        "ok": true,
+        "required": true
+      }
+    ]
+  },
+  "verdict": "pass",
+  "notes": [],
+  "model": null
+}

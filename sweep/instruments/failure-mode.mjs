@@ -271,6 +271,12 @@ const installOrderSubscriberCrash = {
 const STUB_SRC = join(SWEEP_DIR, "bad-patches", "stub-undeclared-module");
 const STUB_DEST = "web/modules/custom/sweep_stub_dep";
 const STUB_MODULE = "sweep_stub_dep";
+// The repair recipe is harness-owned (sweep/recipes/), staged into the scratch
+// so it never depends on an untracked fixture file. Staged at the project root
+// (ddev exec cwd is /var/www/html), so the in-container path is fixed.
+const RECIPE_SRC = join(SWEEP_DIR, "recipes", "repair-core-extension.php");
+const RECIPE_DEST = "scripts/repair-core-extension.php";
+const RECIPE_CONTAINER_PATH = "/var/www/html/scripts/repair-core-extension.php";
 
 async function installStub(ctx) {
   const { execFile } = await import("node:child_process");
@@ -282,15 +288,33 @@ async function installStub(ctx) {
   };
 }
 
+/** Stage the harness repair recipe into the scratch; returns its revert. */
+async function stageRecipe() {
+  const { execFile } = await import("node:child_process");
+  const { promisify } = await import("node:util");
+  const run = promisify(execFile);
+  const dest = join(SCRATCH_PROJECT_DIR, RECIPE_DEST);
+  await run("mkdir", ["-p", join(SCRATCH_PROJECT_DIR, "scripts")], { timeout: 30_000 });
+  await run("cp", [RECIPE_SRC, dest], { timeout: 30_000 });
+  return async () => {
+    await run("rm", ["-f", dest], { timeout: 30_000 });
+  };
+}
+
 const halfInstallState = {
   scratch: true,
   requiresExec: true,
   mutations: () => [
     { kind: "stub-module", detail: `copy sweep_stub_dep (service references non-existent sweep.missing_service) into the scratch site, then pm:enable it (bricks bootstrap)` },
+    { kind: "harness-recipe", detail: `stage the harness repair recipe (sweep/recipes/repair-core-extension.php) into the scratch at scripts/` },
   ],
   async reproduce(ctx) {
     const revert = await installStub(ctx);
     await ctx.registry.markApplied(ctx.mutations[0], revert);
+    // Stage the repair recipe the detect step will run (harness-owned, so it
+    // exists in the scratch regardless of what the fixture checkout tracks).
+    const recipeRevert = await stageRecipe();
+    await ctx.registry.markApplied(ctx.mutations[1], recipeRevert);
     const enable = await call(ctx.client, "drush_dispatch", {
       args: ["pm:enable", STUB_MODULE, "-y"], timeout_ms: 120_000,
     });
@@ -307,24 +331,26 @@ const halfInstallState = {
     };
   },
   async detect(ctx) {
-    // Detection recipe: the repair script removes the half-installed module
-    // from core.extension via DIRECT DB access (PDO — no Drupal bootstrap).
-    // It must run through plain `ddev exec php`, NOT through drush_dispatch:
-    // drush boots first and dies on a bricked site. The sweep is the
-    // legitimate user of this escape hatch; recovery is then verified through
-    // the planes — including a DEEP check (pm:list), because get_site_status
-    // alone reported "recovered" on a site whose module handler was broken.
+    // Detection recipe: the harness repair script removes the half-installed
+    // module from core.extension via DIRECT DB access (PDO — no Drupal
+    // bootstrap). It must run through plain `ddev exec php`, NOT through
+    // drush_dispatch: drush boots first and dies on a bricked site. The sweep
+    // is the legitimate user of this escape hatch; recovery is then verified
+    // through the planes — including a DEEP check (pm:list), because
+    // get_site_status alone reported "recovered" on a site whose module
+    // handler was broken.
     const { execFile } = await import("node:child_process");
     const { promisify } = await import("node:util");
     const run = promisify(execFile);
     let repairExit = "?";
-    let repairErr = "";
+    let repairOut = "";
     try {
-      await run("ddev", ["-p", SCRATCH_PROJECT_NAME, "exec", "php", "scripts/agent-planes/repair-core-extension.php", STUB_MODULE], { timeout: 300_000 });
+      const r = await run("ddev", ["-p", SCRATCH_PROJECT_NAME, "exec", "php", RECIPE_CONTAINER_PATH, STUB_MODULE], { timeout: 300_000 });
       repairExit = 0;
+      repairOut = String(r.stdout ?? "").trim().slice(0, 160);
     } catch (e) {
       repairExit = e.code ?? 1;
-      repairErr = String(e.stderr ?? e.message ?? "").replace(/\s+/g, " ").slice(0, 200);
+      repairOut = String(e.stderr ?? e.message ?? "").replace(/\s+/g, " ").slice(0, 200);
     }
     const cr = await call(ctx.client, "drush_dispatch", { args: ["cr"], timeout_ms: 120_000 });
     const crExit = cr?.data?.exitCode;
@@ -336,8 +362,8 @@ const halfInstallState = {
     const recovered = repairExit === 0 && crExit === 0 && status.status === "ok" && modules.status === "ok";
     return {
       verdict: recovered ? "pass" : "fail",
-      tool: "repair script (ddev exec php, PDO-direct) + cr + get_site_status + list_site_modules",
-      detail: `repair exit=${repairExit}${repairErr ? ` (${repairErr})` : ""}, cr exit=${crExit}, bootstrap=${status?.status}, pm:list=${modules?.status} (recovery recipe: all four must be green)`,
+      tool: "repair recipe (ddev exec php, PDO-direct) + cr + get_site_status + list_site_modules",
+      detail: `repair exit=${repairExit}${repairOut ? ` "${repairOut}"` : ""}, cr exit=${crExit}, bootstrap=${status?.status}, pm:list=${modules?.status} (recovery recipe: all four must be green)`,
       // Machine-readable outcomes so the gate can refuse a pass its own
       // evidence contradicts: a required step with a nonzero exit / ok:false
       // makes detect.verdict "pass" invalid.

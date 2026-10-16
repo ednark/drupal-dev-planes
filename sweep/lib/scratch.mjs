@@ -30,6 +30,8 @@ const SCRATCH_URL = process.env.SWEEP_SCRATCH_URL ?? `https://${SCRATCH_PROJECT}
 
 /** Written into a scratch dir the moment the harness claims it. */
 const OWNER_MARKER = ".sweep-scratch-owned";
+/** Written when provisioning completes; also proof the harness created the dir. */
+const INSTALLED_MARKER = ".sweep-scratch-installed";
 const REPO_ROOT = resolve(SWEEP_DIR, ".."); // the drupal-dev-planes checkout
 const FIXTURE_SITE = process.env.SWEEP_FIXTURE_SITE ?? "usagov2021";
 
@@ -70,10 +72,11 @@ export function validateScratchDest({
   return { ok: true, abs };
 }
 
-/** True only if the harness wrote its ownership marker into this directory. */
+/** True only if the harness wrote one of its markers into this directory. */
 export function isHarnessOwned(dir) {
   try {
-    return existsSync(join(resolve(dir), OWNER_MARKER));
+    const abs = resolve(dir);
+    return existsSync(join(abs, OWNER_MARKER)) || existsSync(join(abs, INSTALLED_MARKER));
   } catch {
     return false;
   }

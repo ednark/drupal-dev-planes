@@ -395,6 +395,7 @@ async function runScratchMode(targetArg) {
   const fixture = {
     site: SCRATCH_PROJECT,
     url: SCRATCH_URL,
+    healthUrl: scratch.url, // scratch-mode health checks must probe the scratch, not undefined
     drupal: process.env.SWEEP_FIXTURE_DRUPAL ?? "10.6",
     scratch: true,
     installError: scratch.installError ?? null,
