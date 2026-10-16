@@ -3,9 +3,8 @@
 
 import { type McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { maskSecrets } from "@drupal-dev-planes/state";
-import { canonicalize, diffConfig, probePage } from "@drupal-dev-planes/verify";
-import { diffEntityValues, readbackEntity } from "@drupal-dev-planes/writes";
+import { maskSecrets, readbackEntity } from "@drupal-dev-planes/state";
+import { canonicalize, diffConfig, diffEntityValues, probePage } from "@drupal-dev-planes/verify";
 import { type ServerConfig } from "../config.js";
 import {
   envelope, textResult, READ_ANNOTATIONS, drushProvenance, drushConfig, asObject,

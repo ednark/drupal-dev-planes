@@ -1,3 +1,8 @@
+// The writes plane: guarded, precondition-checked tools that mutate a site.
+// Reads (field defs, entity read-back) live in @drupal-dev-planes/state; the
+// entity diff lives in @drupal-dev-planes/verify. This package owns only the
+// side-effecting operations and their write preconditions.
+
 export {
   phpPayload,
   parseTrailingJson,
@@ -7,27 +12,17 @@ export {
 } from "./php-eval.js";
 export {
   missingRequiredValues,
-  normalizeFieldDefs,
-  type FieldDef,
+  STRUCTURAL_BASE_FIELDS,
 } from "./fields.js";
 export {
   createContent,
   createContentWire,
   deleteContent,
-  diffEntityValues,
-  fetchFieldDefs,
-  readbackEntity,
   createContentSnippet,
   deleteContentSnippet,
-  entityReadbackSnippet,
-  fieldDefsSnippet,
-  isEntityType,
   normalizeCreateContentResult,
   type CreateContentPayload,
   type CreateContentResult,
-  type EntityDiff,
-  type EntityReadback,
-  type EntityType,
 } from "./content.js";
 export {
   addField,

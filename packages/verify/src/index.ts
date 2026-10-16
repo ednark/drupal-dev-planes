@@ -72,6 +72,42 @@ export function diffConfig(
   return { verdict, missing, mismatched, extra };
 }
 
+export interface EntityDiff extends ConfigDiff {
+  /** Keys compared via the loose scalar shorthand instead of exact deltas. */
+  loose: string[];
+}
+
+/**
+ * Subset-compare expected field values against an entity read-back. Exact form
+ * first (title as scalar, fields as delta arrays of item objects); on
+ * mismatch, retry scalar expected values against the first item's `value` so
+ * agents can write `body: "hi"` instead of the full item array. The read-back
+ * itself comes from the state plane; this owns only the comparison.
+ */
+export function diffEntityValues(
+  actual: Record<string, unknown>,
+  expected: Record<string, unknown>,
+): EntityDiff {
+  const direct = diffConfig(actual, expected);
+  const loose: string[] = [];
+  if (direct.verdict === "match") return { ...direct, loose };
+  const adjusted: Record<string, unknown> = { ...actual };
+  for (const [key, want] of Object.entries(expected)) {
+    if (want === null || typeof want !== "object") {
+      const raw = actual[key];
+      if (Array.isArray(raw)) {
+        const first = raw[0];
+        if (first !== null && typeof first === "object" && !Array.isArray(first) && "value" in (first as Record<string, unknown>)) {
+          adjusted[key] = (first as Record<string, unknown>)["value"];
+          loose.push(key);
+        }
+      }
+    }
+  }
+  const retry = diffConfig(adjusted, expected);
+  return { ...retry, loose };
+}
+
 export type PageVerdict =
   | "alive"
   | "content_missing"

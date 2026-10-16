@@ -4,11 +4,10 @@
 import { type McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import {
-  checkRoute, findContent, findTerm, getWatchdog, listMenus, listRoles, listViews,
+  checkRoute, findContent, findTerm, fetchFieldDefs, getWatchdog, listMenus, listRoles, listViews,
   maskSecrets, normalizeModules, normalizeStatus, parseJsonLoose, runDrush,
   WATCHDOG_SEVERITY_NAMES,
 } from "@drupal-dev-planes/state";
-import { fetchFieldDefs } from "@drupal-dev-planes/writes";
 import { type ServerConfig } from "../config.js";
 import {
   envelope, textResult, stateUnavail, READ_ANNOTATIONS, drushProvenance, drushConfig,

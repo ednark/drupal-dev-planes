@@ -1,18 +1,16 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
-  diffEntityValues,
   missingRequiredValues,
   normalizeCreateContentResult,
-  normalizeFieldDefs,
   createContentSnippet,
   createContentWire,
-  entityReadbackSnippet,
   phpPayload,
   parseTrailingJson,
   shellJoinedEvalArg,
 } from "../packages/writes/src/index.js";
-import type { FieldDef } from "../packages/writes/src/fields.js";
+import { normalizeFieldDefs, entityReadbackSnippet, type FieldDef } from "../packages/state/src/index.js";
+import { diffEntityValues } from "../packages/verify/src/index.js";
 
 // ---------------------------------------------------------------------------
 // Field-definition normalizer

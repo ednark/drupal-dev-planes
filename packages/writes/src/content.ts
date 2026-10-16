@@ -1,37 +1,15 @@
-import { type DrushConfig } from "@drupal-dev-planes/state";
-import { diffConfig, type ConfigDiff } from "@drupal-dev-planes/verify";
-import { phpEval, phpPayload, type EvalOutcome } from "./php-eval.js";
-import { normalizeFieldDefs, missingRequiredValues, type FieldDef } from "./fields.js";
+import { type DrushConfig, phpEval, phpPayload, type EvalOutcome, type EntityType } from "@drupal-dev-planes/state";
 
 /**
- * Guarded content-entity writes. Each function builds a self-contained
- * `drush php:eval` snippet: catalog preconditions run BEFORE the write,
- * verification runs AFTER, and the agent surface never sees raw code.
+ * Guarded content-entity writes (create + delete). Reads — field definitions
+ * and entity read-back — live in the state plane
+ * (@drupal-dev-planes/state); the entity diff lives in the verification plane
+ * (@drupal-dev-planes/verify). This module owns only what mutates a site.
  */
 
-const ENTITY_TYPES = ["node", "taxonomy_term", "user", "media", "block_content"] as const;
-export type EntityType = (typeof ENTITY_TYPES)[number];
-
-export function isEntityType(value: string): value is EntityType {
-  return (ENTITY_TYPES as readonly string[]).includes(value);
-}
-
 // ---------------------------------------------------------------------------
-// Snippets (payload passes as base64; snippets return one JSON value).
+// create_content
 // ---------------------------------------------------------------------------
-
-export function fieldDefsSnippet(entityType: EntityType, bundle: string): string {
-  const payload = phpPayload({ entity_type: entityType, bundle });
-  return [
-    `$p = json_decode(base64_decode('${payload}'), true);`,
-    `$defs = \\Drupal::service('entity_field.manager')->getFieldDefinitions($p['entity_type'], $p['bundle']);`,
-    `$out = [];`,
-    `foreach ($defs as $name => $def) {`,
-    `  $out[] = ['name' => $name, 'label' => (string) $def->getLabel(), 'type' => $def->getType(), 'required' => (bool) $def->isRequired(), 'cardinality' => (int) $def->getFieldStorageDefinition()->getCardinality()];`,
-    `}`,
-    `return json_encode(array_values($out));`,
-  ].join("\n");
-}
 
 export interface CreateContentPayload {
   entity_type: EntityType;
@@ -44,6 +22,23 @@ export interface CreateContentPayload {
   moderationState?: string;
   /** Field-name → delta values, exactly as \Drupal::Entity::set() accepts them. */
   fields: Record<string, unknown>;
+}
+
+/**
+ * Map the camelCase payload to the snake_case wire shape the PHP snippet
+ * reads. Without this, `moderationState` never reached `$p['moderation_state']`
+ * and moderated bundles silently stayed in their initial state.
+ */
+export function createContentWire(payload: CreateContentPayload): Record<string, unknown> {
+  return {
+    entity_type: payload.entity_type,
+    bundle: payload.bundle,
+    title: payload.title,
+    published: payload.published,
+    fields: payload.fields,
+    ...(payload.alias !== undefined ? { alias: payload.alias } : {}),
+    ...(payload.moderationState !== undefined ? { moderation_state: payload.moderationState } : {}),
+  };
 }
 
 export function createContentSnippet(payload: Record<string, unknown>): string {
@@ -97,26 +92,19 @@ export function normalizeCreateContentResult(raw: unknown): CreateContentResult 
   };
 }
 
-export function entityReadbackSnippet(entityType: EntityType, id: number | null, uuid: string | null): string {
-  const payload = phpPayload({ entity_type: entityType, id, uuid });
-  return [
-    `$p = json_decode(base64_decode('${payload}'), true);`,
-    `$storage = \\Drupal::entityTypeManager()->getStorage($p['entity_type']);`,
-    `$entity = null;`,
-    `if (!empty($p['uuid'])) { $found = $storage->loadByProperties(['uuid' => $p['uuid']]); $entity = $found ? reset($found) : null; }`,
-    `if (!$entity && !empty($p['id'])) { $entity = $storage->load($p['id']); }`,
-    `if (!$entity) { return json_encode(['found' => false]); }`,
-    `$out = ['found' => true, 'entity_type' => $entity->getEntityTypeId(), 'id' => (int) $entity->id(), 'uuid' => $entity->uuid(), 'bundle' => $entity->bundle(), 'label' => (string) $entity->label()];`,
-    `if (method_exists($entity, 'isPublished')) { $out['published'] = (bool) $entity->isPublished(); }`,
-    `foreach ($entity->getFields() as $name => $list) {`,
-    `  if ($name === 'label' || $name === 'title') { continue; }`,
-    `  $vals = [];`,
-    `  foreach ($list as $item) { $vals[] = $item->getValue(); }`,
-    `  $out[$name] = $vals;`,
-    `}`,
-    `return json_encode($out);`,
-  ].join("\n");
+export function createContent(
+  config: DrushConfig,
+  payload: CreateContentPayload,
+  timeoutMs?: number,
+): Promise<EvalOutcome<CreateContentResult>> {
+  return phpEval<unknown>(config, createContentSnippet(createContentWire(payload)), timeoutMs).then((r) =>
+    r.ok ? { ok: true, value: normalizeCreateContentResult(r.value) } : r,
+  );
 }
+
+// ---------------------------------------------------------------------------
+// delete_content
+// ---------------------------------------------------------------------------
 
 export function deleteContentSnippet(entityType: EntityType, ids: number[], uuid: string | null): string {
   const payload = phpPayload({ entity_type: entityType, ids, uuid });
@@ -130,70 +118,6 @@ export function deleteContentSnippet(entityType: EntityType, ids: number[], uuid
     `foreach ($targets as $e) { try { $e->delete(); $deleted++; } catch (Throwable $ex) { $errors[] = $ex->getMessage(); } }`,
     `return json_encode(['deleted' => $deleted, 'errors' => $errors]);`,
   ].join("\n");
-}
-
-// ---------------------------------------------------------------------------
-// Operations (thin wrappers over the snippets; the server supplies config).
-// ---------------------------------------------------------------------------
-
-export function fetchFieldDefs(
-  config: DrushConfig,
-  entityType: EntityType,
-  bundle: string,
-  timeoutMs?: number,
-): Promise<EvalOutcome<FieldDef[]>> {
-  const outcome = phpEval<unknown>(config, fieldDefsSnippet(entityType, bundle), timeoutMs);
-  return outcome.then((r) =>
-    r.ok ? { ok: true, value: normalizeFieldDefs(r.value) } : r,
-  );
-}
-
-/**
- * Map the camelCase payload to the snake_case wire shape the PHP snippet
- * reads. Without this, `moderationState` never reached `$p['moderation_state']`
- * and moderated bundles silently stayed in their initial state.
- */
-export function createContentWire(payload: CreateContentPayload): Record<string, unknown> {
-  return {
-    entity_type: payload.entity_type,
-    bundle: payload.bundle,
-    title: payload.title,
-    published: payload.published,
-    fields: payload.fields,
-    ...(payload.alias !== undefined ? { alias: payload.alias } : {}),
-    ...(payload.moderationState !== undefined ? { moderation_state: payload.moderationState } : {}),
-  };
-}
-
-export function createContent(
-  config: DrushConfig,
-  payload: CreateContentPayload,
-  timeoutMs?: number,
-): Promise<EvalOutcome<CreateContentResult>> {
-  return phpEval<unknown>(config, createContentSnippet(createContentWire(payload)), timeoutMs).then((r) =>
-    r.ok ? { ok: true, value: normalizeCreateContentResult(r.value) } : r,
-  );
-}
-
-export interface EntityReadback {
-  found: boolean;
-  entity_type?: string;
-  id?: number;
-  uuid?: string;
-  bundle?: string;
-  label?: string;
-  published?: boolean;
-  [field: string]: unknown;
-}
-
-export function readbackEntity(
-  config: DrushConfig,
-  entityType: EntityType,
-  id: number | null,
-  uuid: string | null,
-  timeoutMs?: number,
-): Promise<EvalOutcome<EntityReadback>> {
-  return phpEval<EntityReadback>(config, entityReadbackSnippet(entityType, id, uuid), timeoutMs);
 }
 
 export function deleteContent(
@@ -214,46 +138,4 @@ export function deleteContent(
       },
     };
   });
-}
-
-export { missingRequiredValues, normalizeFieldDefs };
-export type { FieldDef };
-
-// ---------------------------------------------------------------------------
-// Entity diff: expected flat values vs the read-back, with scalar-unwrapping.
-// ---------------------------------------------------------------------------
-
-export interface EntityDiff extends ConfigDiff {
-  /** Keys compared via the loose scalar shorthand instead of exact deltas. */
-  loose: string[];
-}
-
-/**
- * Subset-compare expected field values against the entity read-back. Exact
- * form first (title as scalar, fields as delta arrays of item objects); on
- * mismatch, retry scalar expected values against the first item's `value`
- * so agents can write `body: "hi"` instead of the full item array.
- */
-export function diffEntityValues(
-  actual: Record<string, unknown>,
-  expected: Record<string, unknown>,
-): EntityDiff {
-  const direct = diffConfig(actual, expected);
-  const loose: string[] = [];
-  if (direct.verdict === "match") return { ...direct, loose };
-  const adjusted: Record<string, unknown> = { ...actual };
-  for (const [key, want] of Object.entries(expected)) {
-    if (want === null || typeof want !== "object") {
-      const raw = actual[key];
-      if (Array.isArray(raw)) {
-        const first = raw[0];
-        if (first !== null && typeof first === "object" && !Array.isArray(first) && "value" in (first as Record<string, unknown>)) {
-          adjusted[key] = (first as Record<string, unknown>)["value"];
-          loose.push(key);
-        }
-      }
-    }
-  }
-  const retry = diffConfig(adjusted, expected);
-  return { ...retry, loose };
 }

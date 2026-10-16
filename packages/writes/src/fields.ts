@@ -1,57 +1,17 @@
 /**
- * Field-definition normalization for the write tools' precondition checks.
- * Written defensively (drush/PHP shapes vary); graduates to `measured` via
- * the sweep harness like every other normalizer.
- */
-
-function asRecord(value: unknown): Record<string, unknown> {
-  return value !== null && typeof value === "object" && !Array.isArray(value)
-    ? (value as Record<string, unknown>)
-    : {};
-}
-
-function str(value: unknown): string | undefined {
-  return typeof value === "string" && value.length > 0 ? value : undefined;
-}
-
-export interface FieldDef {
-  name: string;
-  label?: string;
-  type?: string;
-  required: boolean;
-  /** -1 means unlimited; 1 is the Drupal default. */
-  cardinality: number;
-}
-
-export function normalizeFieldDefs(raw: unknown): FieldDef[] {
-  if (!Array.isArray(raw)) return [];
-  return raw
-    .map((row) => {
-      const r = asRecord(row);
-      const name = str(r["name"]) ?? "";
-      const cardinalityRaw = r["cardinality"];
-      const cardinality =
-        typeof cardinalityRaw === "number" && Number.isFinite(cardinalityRaw)
-          ? cardinalityRaw
-          : 1;
-      return {
-        name,
-        label: str(r["label"]),
-        type: str(r["type"]),
-        required: r["required"] === true || r["required"] === 1 || r["required"] === "1",
-        cardinality,
-      } satisfies FieldDef;
-    })
-    .filter((f) => f.name !== "");
-}
-
-/**
- * Precondition for create-class writes: every required field must be
- * provided with a non-empty value. This is the catalog-backed refusal for
+ * Write precondition: every required field must be provided with a non-empty
+ * value before a create-class write. This is the catalog-backed refusal for
  * the MEASURED row `unpopulated-field-fatal` — creating an entity without
- * populating a required field took the whole site to HTTP 500, and the
+ * populating a required field took the whole site to HTTP 500 while the
  * commit reported success.
+ *
+ * This is a *write guard*, so it lives in the writes plane. The field
+ * *definitions* it reads come from the state plane
+ * (@drupal-dev-planes/state: FieldDef, fetchFieldDefs).
  */
+
+import { type FieldDef } from "@drupal-dev-planes/state";
+
 /**
  * Structural base fields the write tools set themselves (or that default):
  * they appear as required in field definitions but are NOT the caller's

@@ -3,9 +3,9 @@
 
 import { type McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { normalizeModules, parseJsonLoose, runDrush } from "@drupal-dev-planes/state";
+import { fetchFieldDefs, normalizeModules, parseJsonLoose, runDrush } from "@drupal-dev-planes/state";
 import {
-  addField, createContent, createContentType, deleteContent, fetchFieldDefs,
+  addField, createContent, createContentType, deleteContent,
   installModuleCheck, isFieldType, missingRequiredValues, nodeTypeExists, placeBlock,
   readbackDisplayComponent, setDisplayComponent, setPermissions,
 } from "@drupal-dev-planes/writes";

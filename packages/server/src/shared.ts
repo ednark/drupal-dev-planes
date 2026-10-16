@@ -4,8 +4,14 @@
 
 import type { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { callKnowledgeTool, connectKnowledge } from "@drupal-dev-planes/knowledge";
-import { normalizeConfigValue, parseJsonLoose, runDrush } from "@drupal-dev-planes/state";
-import { isEntityType, type EntityType } from "@drupal-dev-planes/writes";
+import {
+  ENTITY_TYPES,
+  isEntityType,
+  normalizeConfigValue,
+  parseJsonLoose,
+  runDrush,
+  type EntityType,
+} from "@drupal-dev-planes/state";
 import { type ServerConfig } from "./config.js";
 
 // ---------------------------------------------------------------------------
@@ -114,7 +120,7 @@ export function drushConfig(config: ServerConfig) {
   return { bin: config.drushBin, root: config.siteRoot, timeoutMs: config.drushTimeoutMs, shellJoined: config.drushShellJoined };
 }
 
-export const ENTITY_TYPE_ENUM = ["node", "taxonomy_term", "user", "media", "block_content"] as const;
+export const ENTITY_TYPE_ENUM = ENTITY_TYPES;
 
 export function parseEntityType(value: string): { ok: true; entityType: EntityType } | { ok: false } {
   return isEntityType(value) ? { ok: true, entityType: value } : { ok: false };

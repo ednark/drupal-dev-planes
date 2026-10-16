@@ -36,6 +36,18 @@ export {
   type TermHit,
 } from "./entities.js";
 export {
+  ENTITY_TYPES,
+  isEntityType,
+  normalizeFieldDefs,
+  fieldDefsSnippet,
+  fetchFieldDefs,
+  entityReadbackSnippet,
+  readbackEntity,
+  type EntityType,
+  type FieldDef,
+  type EntityReadback,
+} from "./entity-reads.js";
+export {
   normalizeStatus,
   normalizeModules,
   normalizeConfigValue,
