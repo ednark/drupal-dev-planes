@@ -18,7 +18,7 @@
     "sweep:all": "node sweep/runner.mjs all",
     "sweep:failure-mode": "node sweep/runner.mjs fm",
     "sweep:corpus": "node sweep/runner.mjs corpus",
-    "sweep:answerability": "SWEEP_B2_MODELS=${SWEEP_B2_MODELS:-llama31-8b-16k} node sweep/runner.mjs corpus",
+    "sweep:answerability": "SWEEP_ANSWERABILITY_MODELS=${SWEEP_ANSWERABILITY_MODELS:-llama31-8b-16k} node sweep/runner.mjs corpus",
     "sweep:regression": "node sweep/regression.mjs",
     "sweep:scratch": "node sweep/runner.mjs scratch",
     "sweep:gate": "node sweep/gate.mjs",
