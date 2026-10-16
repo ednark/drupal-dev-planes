@@ -1,5 +1,5 @@
 {
-  "name": "@drupal-agent-planes/knowledge",
+  "name": "@drupal-dev-planes/knowledge",
   "version": "0.1.0",
   "type": "module",
   "main": "dist/index.js",

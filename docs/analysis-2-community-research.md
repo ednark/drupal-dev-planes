@@ -2,7 +2,7 @@
 
 **Date:** 2026-10-16
 **Scope:** External research supporting, contradicting, or instrumenting the
-drupal-agent-planes design (knowledge / state / verification) and the
+drupal-dev-planes design (knowledge / state / verification) and the
 `OpenCode Agentic Engineering Harness.md` plan. Complements
 `analysis-1-conclusions.md`.
 

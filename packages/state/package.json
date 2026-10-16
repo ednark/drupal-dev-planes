@@ -1,5 +1,5 @@
 {
-  "name": "@drupal-agent-planes/state",
+  "name": "@drupal-dev-planes/state",
   "version": "0.1.0",
   "type": "module",
   "main": "dist/index.js",

@@ -12,7 +12,7 @@ Report findings in severity order with file and line references:
 correctness bugs; spec drift or missing acceptance criteria; weakened,
 skipped or deleted tests; missing verification evidence (site writes
 claimed without verify_config/verify_page verdicts when the
-drupal-agent-planes server is configured).
+drupal-dev-planes server is configured).
 
 Findings only — do not fix anything. Write your result file and reply with
 its path plus a one-line verdict: pass, needs-changes, or blocked.

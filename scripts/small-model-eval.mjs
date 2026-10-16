@@ -91,7 +91,7 @@ const QUESTIONS = [
 ];
 
 // ---------------------------------------------------------------------------
-// Knowledge plane (through drupal-agent-planes server → drupal-dev-mcp).
+// Knowledge plane (through drupal-dev-planes server → drupal-dev-mcp).
 // ---------------------------------------------------------------------------
 
 const transport = new StdioClientTransport({

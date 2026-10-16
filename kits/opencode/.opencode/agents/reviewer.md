@@ -34,7 +34,7 @@ Report findings in severity order with file and line references:
 2. spec drift or missing acceptance criteria
 3. weakened, skipped, or deleted tests
 4. missing verification evidence — writes claimed without
-   verify_config/verify_page verdicts when the drupal-agent-planes server
+   verify_config/verify_page verdicts when the drupal-dev-planes server
    is configured
 
 Write .agent/results/task-NN.md (or task-NN-review.md if a result already

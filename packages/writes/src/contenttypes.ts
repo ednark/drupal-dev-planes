@@ -4,8 +4,8 @@
  * verification. The agent surface never sees raw code.
  */
 
-import { type DrushConfig } from "@drupal-agent-planes/state";
-import { phpEval, type EvalOutcome } from "@drupal-agent-planes/state";
+import { type DrushConfig } from "@drupal-dev-planes/state";
+import { phpEval, type EvalOutcome } from "@drupal-dev-planes/state";
 
 // ---------------------------------------------------------------------------
 // Node type existence (precondition + read-back)

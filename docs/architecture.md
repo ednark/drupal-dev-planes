@@ -1,4 +1,4 @@
-# Architecture: drupal-agent-planes
+# Architecture: drupal-dev-planes
 
 Three planes of truth for Drupal development agents, composed as one MCP
 interface.

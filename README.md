@@ -1,4 +1,4 @@
-# drupal-agent-planes
+# drupal-dev-planes
 
 A unified three-plane MCP interface for Drupal development agents:
 
@@ -43,9 +43,9 @@ site root are configured.
 ```json
 {
   "mcpServers": {
-    "drupal-agent-planes": {
+    "drupal-dev-planes": {
       "command": "node",
-      "args": ["/absolute/path/to/drupal-agent-planes/packages/server/dist/index.js"],
+      "args": ["/absolute/path/to/drupal-dev-planes/packages/server/dist/index.js"],
       "env": {
         "DRUPAL_DEV_MCP_COMMAND": "node",
         "DRUPAL_DEV_MCP_ARGS": "/absolute/path/to/drupal-dev-mcp/packages/server/dist/index.js",

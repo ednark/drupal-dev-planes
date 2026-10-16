@@ -32,7 +32,7 @@ const DRUPAL_DEV_MCP = process.env.DRUPAL_DEV_MCP_SERVER ??
 
 // ---------------------------------------------------------------------------
 // Connect DIRECTLY to drupal-dev-mcp (the expert tool is its surface, not
-// drupal-agent-planes'). Pass the local synthesis model through the env —
+// drupal-dev-planes'). Pass the local synthesis model through the env —
 // exactly the configuration the README prescribes for local models.
 // ---------------------------------------------------------------------------
 

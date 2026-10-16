@@ -15,7 +15,7 @@ tests may not drift after approval without a human-approved re-run of
 /tests.
 
 Only a green suite plus an empty test diff passes verification. Then record
-the outcome in .agent/ledger.md. If the drupal-agent-planes server is
+the outcome in .agent/ledger.md. If the drupal-dev-planes server is
 configured and the feature made site writes, also confirm the verification
 verdicts (verify_config / verify_page) recorded in the results — "tests
 green" does not prove the delivered site works.

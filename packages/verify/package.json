@@ -1,5 +1,5 @@
 {
-  "name": "@drupal-agent-planes/verify",
+  "name": "@drupal-dev-planes/verify",
   "version": "0.1.0",
   "type": "module",
   "main": "dist/index.js",

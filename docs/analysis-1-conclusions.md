@@ -3,7 +3,7 @@
 **Date:** 2026-09-26
 **Scope:** Standing up the public `usagov/usagov-2021` Drupal 10.6 codebase under
 ddev from `site:install --existing-config` (no upstream DB dump available), then
-rebuilding 5 live usa.gov pages through the drupal-agent-planes MCP server.
+rebuilding 5 live usa.gov pages through the drupal-dev-planes MCP server.
 **Related artifacts:** `docs/usagov-2021-upstream-proposals.patch`,
 `data/failure-modes.json` (5 rows graduated to `measured`).
 

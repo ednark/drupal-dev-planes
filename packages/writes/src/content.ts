@@ -1,5 +1,5 @@
-import { type DrushConfig } from "@drupal-agent-planes/state";
-import { diffConfig, type ConfigDiff } from "@drupal-agent-planes/verify";
+import { type DrushConfig } from "@drupal-dev-planes/state";
+import { diffConfig, type ConfigDiff } from "@drupal-dev-planes/verify";
 import { phpEval, phpPayload, type EvalOutcome } from "./php-eval.js";
 import { normalizeFieldDefs, missingRequiredValues, type FieldDef } from "./fields.js";
 

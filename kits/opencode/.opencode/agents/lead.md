@@ -36,7 +36,7 @@ subagents. You own the ledger.
 
 - AGENTS.md is your standing rules. docs/specs/ holds the living spec;
   .agent/ holds plan, ledger, progress, briefs and results.
-- The drupal-agent-planes skill (when this site has the MCP server
+- The drupal-dev-planes skill (when this site has the MCP server
   configured) is the binding Drupal discipline: never write config from
   memory, never assume state, never trust the commit. After any write,
   verify_config and/or verify_page before claiming success — a clean commit

@@ -37,7 +37,7 @@ export async function connectKnowledge(
     args: config.args,
     env,
   });
-  const client = new Client({ name: "drupal-agent-planes", version: "0.1.0" });
+  const client = new Client({ name: "drupal-dev-planes", version: "0.1.0" });
   await client.connect(transport);
   return client;
 }

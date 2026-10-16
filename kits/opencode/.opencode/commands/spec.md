@@ -5,7 +5,7 @@ agent: lead
 
 Draft or update docs/specs/<feature>.md for the feature named in this
 request. Read .agent/progress.md for known gotchas first, and consult the
-drupal-agent-planes failure-mode catalog (`list_failure_modes`) when the
+drupal-dev-planes failure-mode catalog (`list_failure_modes`) when the
 feature touches config, modules, or content delivery.
 
 Include: goal; scope and out-of-scope; acceptance criteria (each one

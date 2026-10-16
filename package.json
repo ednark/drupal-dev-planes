@@ -1,5 +1,5 @@
 {
-  "name": "drupal-agent-planes",
+  "name": "drupal-dev-planes",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -15,7 +15,7 @@
     "packages/server"
   ],
   "scripts": {
-    "build": "npm run build -w @drupal-agent-planes/knowledge -w @drupal-agent-planes/state -w @drupal-agent-planes/verify -w @drupal-agent-planes/writes -w @drupal-agent-planes/server",
+    "build": "npm run build -w @drupal-dev-planes/knowledge -w @drupal-dev-planes/state -w @drupal-dev-planes/verify -w @drupal-dev-planes/writes -w @drupal-dev-planes/server",
     "typecheck": "tsc -p tsconfig.typecheck.json",
     "test": "tsx --test tests/*.test.ts",
     "smoke": "node scripts/smoke.mjs",

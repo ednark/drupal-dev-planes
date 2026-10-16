@@ -1,5 +1,5 @@
 {
-  "name": "@drupal-agent-planes/writes",
+  "name": "@drupal-dev-planes/writes",
   "version": "0.1.0",
   "type": "module",
   "main": "dist/index.js",
@@ -14,7 +14,7 @@
     "build": "tsc -p tsconfig.json"
   },
   "dependencies": {
-    "@drupal-agent-planes/state": "*",
-    "@drupal-agent-planes/verify": "*"
+    "@drupal-dev-planes/state": "*",
+    "@drupal-dev-planes/verify": "*"
   }
 }

@@ -28,7 +28,7 @@ Rules:
   it.
 - Run preflight first (AGENTS.md): test baseline, clean tree, commits since
   the brief was written. On discrepancy, write a blocked result and return.
-- If this site has the drupal-agent-planes MCP server, follow its skill:
+- If this site has the drupal-dev-planes MCP server, follow its skill:
   read state before writing config, ground API facts in the knowledge plane,
   and after any write run verify_config / verify_page — a clean commit is
   not evidence of a working site. Record the verification verdicts in your

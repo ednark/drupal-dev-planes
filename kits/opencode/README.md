@@ -36,7 +36,7 @@ The script refuses to overwrite an existing `.agent/`. Then by hand:
 2. **Append `AGENTS.snippet.md`** to the project's `AGENTS.md` — or, on a
    fresh project, use it as the starting `AGENTS.md`.
 3. **Adjust the two per-project knobs** (see "Adapt to the site" below).
-4. Configure the `drupal-agent-planes` MCP server for the project
+4. Configure the `drupal-dev-planes` MCP server for the project
    (see the repo README's client configuration). The harness agents assume
    it; without it, agents still work but write-side verification degrades
    to manual checks.

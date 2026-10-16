@@ -70,7 +70,7 @@ sweep/
   lib/
     record.mjs            # record schema, writer, verdict enums
     fixture.mjs           # fixture connection (ddev shim, base URL), mutation helpers
-    planes.mjs            # MCP client to drupal-agent-planes (reuse smoke.mjs pattern)
+    planes.mjs            # MCP client to drupal-dev-planes (reuse smoke.mjs pattern)
   instruments/
     failure-mode.mjs      # family A: reproduce → detect → assert
     corpus.mjs            # family B: retrieval check + answerability check

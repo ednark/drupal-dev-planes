@@ -3,7 +3,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import type { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { z } from "zod";
-import { callKnowledgeTool, connectKnowledge } from "@drupal-agent-planes/knowledge";
+import { callKnowledgeTool, connectKnowledge } from "@drupal-dev-planes/knowledge";
 import {
   checkRoute,
   getWatchdog,
@@ -17,7 +17,7 @@ import {
   parseJsonLoose,
   runDrush,
   WATCHDOG_SEVERITY_NAMES,
-} from "@drupal-agent-planes/state";
+} from "@drupal-dev-planes/state";
 import {
   canonicalize,
   checkClaimSupport,
@@ -25,7 +25,7 @@ import {
   diffConfig,
   loadFailureModes,
   probePage,
-} from "@drupal-agent-planes/verify";
+} from "@drupal-dev-planes/verify";
 import { loadConfig, type ServerConfig } from "./config.js";
 import {
   createContent,
@@ -42,7 +42,7 @@ import {
   normalizeCreateContentTypeResult,
   normalizeAddFieldResult,
   type EntityType,
-} from "@drupal-agent-planes/writes";
+} from "@drupal-dev-planes/writes";
 
 // ---------------------------------------------------------------------------
 // Envelope: every response names its plane, its status, and its provenance.
@@ -181,7 +181,7 @@ async function readConfigObject(
 
 async function main(): Promise<void> {
   const config = loadConfig();
-  const server = new McpServer({ name: "drupal-agent-planes", version: "0.1.0" });
+  const server = new McpServer({ name: "drupal-dev-planes", version: "0.1.0" });
 
   const READ_ANNOTATIONS = {
     readOnlyHint: true,
@@ -893,10 +893,10 @@ async function main(): Promise<void> {
 
   const transport = new StdioServerTransport();
   await server.connect(transport);
-  console.error("drupal-agent-planes 0.1.0 listening on stdio");
+  console.error("drupal-dev-planes 0.1.0 listening on stdio");
 }
 
 main().catch((error) => {
-  console.error("drupal-agent-planes failed to start:", error);
+  console.error("drupal-dev-planes failed to start:", error);
   process.exit(1);
 });

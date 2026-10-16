@@ -1,6 +1,6 @@
 ---
-name: drupal-agent-planes
-description: Three-plane discipline for Drupal development agents — versioned knowledge, live site state, verified writes. Use when building or changing a Drupal site with an agent that has the drupal-agent-planes MCP server configured.
+name: drupal-dev-planes
+description: Three-plane discipline for Drupal development agents — versioned knowledge, live site state, verified writes. Use when building or changing a Drupal site with an agent that has the drupal-dev-planes MCP server configured.
 ---
 
 # The three planes

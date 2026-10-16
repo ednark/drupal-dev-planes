@@ -1,11 +1,11 @@
 {
-  "name": "@drupal-agent-planes/server",
+  "name": "@drupal-dev-planes/server",
   "version": "0.1.0",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "bin": {
-    "drupal-agent-planes": "dist/index.js"
+    "drupal-dev-planes": "dist/index.js"
   },
   "exports": {
     ".": {
@@ -17,9 +17,9 @@
     "build": "tsc -p tsconfig.json"
   },
   "dependencies": {
-    "@drupal-agent-planes/knowledge": "0.1.0",
-    "@drupal-agent-planes/state": "0.1.0",
-    "@drupal-agent-planes/verify": "0.1.0",
+    "@drupal-dev-planes/knowledge": "0.1.0",
+    "@drupal-dev-planes/state": "0.1.0",
+    "@drupal-dev-planes/verify": "0.1.0",
     "@modelcontextprotocol/sdk": "^1.12.0",
     "zod": "^3.23.8"
   }

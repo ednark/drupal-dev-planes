@@ -1,4 +1,4 @@
-// Moved to @drupal-agent-planes/state (eval.ts) so both the state read tools
+// Moved to @drupal-dev-planes/state (eval.ts) so both the state read tools
 // and the write tools share one eval transport. Re-exported for compatibility.
 export {
   phpPayload,
@@ -6,4 +6,4 @@ export {
   phpEval,
   shellJoinedEvalArg,
   type EvalOutcome,
-} from "@drupal-agent-planes/state";
+} from "@drupal-dev-planes/state";

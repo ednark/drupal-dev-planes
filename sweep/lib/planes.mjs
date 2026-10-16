@@ -1,4 +1,4 @@
-// MCP client to drupal-agent-planes (smoke.mjs pattern). Every sweep runs its
+// MCP client to drupal-dev-planes (smoke.mjs pattern). Every sweep runs its
 // reproduce/detect steps through the plane tools — a sweep that bypasses the
 // planes tests nothing about them (sweep-harness principle #3).
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";

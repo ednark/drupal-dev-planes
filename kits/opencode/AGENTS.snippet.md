@@ -18,7 +18,7 @@ can rebuild its picture from disk.
 
 Hard rules:
 
-- The drupal-agent-planes skill is the standing Drupal discipline: never
+- The drupal-dev-planes skill is the standing Drupal discipline: never
   write config from memory, never assume state, never trust the commit.
   After any write, verify_config / verify_page before claiming success.
 - Tests are the executable spec. Never edit, skip, or delete a test to make
