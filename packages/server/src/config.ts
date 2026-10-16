@@ -1,12 +1,20 @@
 import { z } from "zod";
 
+const DEFAULT_DRUSH_TIMEOUT_MS =
+  Number.parseInt(process.env.DRUSH_TIMEOUT_MS ?? "", 10) || 20_000;
+
 const ConfigSchema = z.object({
   drupalDevMcpCommand: z.string().optional(),
   drupalDevMcpArgs: z.array(z.string()).default([]),
   drupalDevMcpEnv: z.record(z.string()).default({}),
   siteRoot: z.string().optional(),
   drushBin: z.string().default("drush"),
-  drushTimeoutMs: z.number().int().positive().max(120_000).default(20_000),
+  drushTimeoutMs: z
+    .number()
+    .int()
+    .positive()
+    .max(120_000)
+    .default(Math.min(DEFAULT_DRUSH_TIMEOUT_MS, 120_000)),
   /** ddev shim bins re-join args through a container shell. */
   drushShellJoined: z.boolean().default(false),
   allowExec: z.boolean().default(false),

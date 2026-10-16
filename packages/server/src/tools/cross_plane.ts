@@ -120,9 +120,10 @@ export function registerCrossPlaneToolRegistrations(server: McpServer, config: S
     async ({ plane }) => {
       const all = loadFailureModes();
       const rows = plane ? all.filter((m) => m.plane === plane) : all;
+      const measured = all.filter((m) => m.evidenceStatus === "measured").length;
       return textResult(envelope("cross-plane", "ok", { count: rows.length, failureModes: rows }, {
         source: "data/failure-modes.json",
-        evidenceStatus: "seed — none swept yet",
+        evidenceStatus: `${measured}/${all.length} rows measured — graduate status is enforced by npm run sweep:gate`,
       }));
     },
   );

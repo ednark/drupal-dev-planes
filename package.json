@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "A unified three-plane MCP interface for Drupal development agents: versioned knowledge, live site state, and verified writes.",
+  "description": "The working harness for Drupal development agents \u2014 an MCP server with four planes: versioned knowledge, live site state, verified writes, and guarded write tools. Never trust the commit.",
   "engines": {
     "node": ">=20"
   },
@@ -34,5 +34,14 @@
     "@types/node": "^20.14.0",
     "tsx": "^4.15.0",
     "typescript": "^5.5.4"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ednark/drupal-dev-planes.git"
+  },
+  "homepage": "https://github.com/ednark/drupal-dev-planes#readme",
+  "bugs": {
+    "url": "https://github.com/ednark/drupal-dev-planes/issues"
   }
 }

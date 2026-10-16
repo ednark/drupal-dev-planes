@@ -1,4 +1,4 @@
-# Sweep harness — Stage A (Phases 1–2 implemented)
+# Sweep harness
 
 Implements `docs/sweep-harness-plan.md`. A **sweep** is a measurement run:
 pick a catalog row (or corpus fixture), reproduce the failure on a live
@@ -89,7 +89,10 @@ untracked gaps. Nothing is written to drupal-dev-mcp's
 `data/corpus-issues.json` by sweeps; set `SWEEP_CORPUS_LEDGER` to enable
 gate rules G3/G4, and a human applies transitions.
 
-## Not implemented yet (later phases)
+## Not implemented yet
 
-- Phase 4: A2 scratch-project sweeps (the 3 unbacked measured rows), gate
-  `--apply`, token-price table
+What remains is tracked by the gate and the catalog, not asserted here:
+rows still `claimed` in `data/failure-modes.json` need instruments
+(config-import-without-rebuild, hook-update-noop, plugin-never-discovered,
+di-runtime-fatal, missing-cache-tag). Corpus-ledger promotions follow the
+B3 rule in `docs/sweep-harness-plan.md`.
