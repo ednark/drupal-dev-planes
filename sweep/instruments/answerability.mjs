@@ -128,7 +128,7 @@ export async function scoreAnswer(answer, fixture, resolveDocsFn) {
 const EXPERT_OK = new Set(["ok", "answered"]); // 0.2 says "answered", 0.1 said "ok"
 
 export async function askAndScore(client, fixture, model, env = process.env) {
-  const depth = env.SWEEP_B2_DEPTH ?? "ask";
+  const depth = env.SWEEP_ANSWERABILITY_DEPTH ?? "ask";
   const t0 = Date.now();
   const parsed = await callTool(client, "ask_a_drupal_expert", {
     question: fixture.question,

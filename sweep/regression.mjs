@@ -23,7 +23,7 @@ async function main() {
       .map((a) => ({ fixture: r.target, model: a.model, recorded: a.claimSupport.verdict, answer: a.answer })),
   );
   if (rows.length === 0) {
-    console.log("no recorded claim-support fixtures yet — run npm run sweep:b2 first");
+    console.log("no recorded claim-support fixtures yet — run npm run sweep:answerability first");
     return;
   }
 

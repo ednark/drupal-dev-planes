@@ -227,7 +227,7 @@ ledger is not silently rewritten by sweeps.
 
 ```
 npm run sweep:all                  # A1 + B1 + B2 (default models) — no reinstall
-npm run sweep:fm -- unpopulated-field-fatal
+npm run sweep:failure-mode -- unpopulated-field-fatal
 npm run sweep:corpus -- phpfloor
 npm run sweep:scratch              # A2 expensive sweeps (isolated project)
 npm run sweep:gate                 # gate rules G1–G5
@@ -256,7 +256,7 @@ record — including `skipped` with a reason when the fixture is unavailable.
 **Phase 1 — harness skeleton + 3 failure-mode sweeps** (the cheap, highest-
 confidence rows: `unpopulated-field-fatal`, `library-css-category-assertion`,
 `critical-error-page`).
-✓ `sweep:fm <target>` writes valid records; gate G1/G2 pass; teardown leaves
+✓ `sweep:failure-mode <target>` writes valid records; gate G1/G2 pass; teardown leaves
 the fixture healthy; the 5 hand-measured rows re-graduate via records.
 
 **Phase 2 — corpus sweep B1** (retrieval check only, deterministic).

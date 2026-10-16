@@ -106,7 +106,7 @@ uncited answers without exonerating them:
   under it (density varies 0 → 0.6 run-to-run on identical prompts). A
   small-model rule variant (shorter, citation-first) is the next upstream
   experiment.
-- **Verification lever (ours)**: `sweep:b2` + `sweep:regression` already
+- **Verification lever (ours)**: `sweep:answerability` + `sweep:regression` already
   measure both levers deterministically — any upstream change must flip the
   recorded uncited/unsupported answers or it didn't work.
 

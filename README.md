@@ -166,7 +166,7 @@ detection recipe catches it, and writes a dated record. The gate
 ```bash
 npm run sweep:all        # failure-mode + corpus targets (fixture required)
 npm run sweep:scratch    # A2 install-crash sweeps on a dedicated ddev project
-npm run sweep:b2         # answerability matrix (model-server required)
+npm run sweep:answerability         # answerability matrix (model-server required)
 npm run sweep:regression # recorded answers as claim-support fixtures
 npm run sweep:gate       # the claims-vs-records check
 npm run sweep:report     # pass rates + token-price table

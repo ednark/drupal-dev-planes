@@ -8,7 +8,7 @@ through the planes, mutations are declared and reversible.
 
 ```
 npm run sweep:all       # Phase-1 failure-mode targets + corpus placeholder
-npm run sweep:fm -- unpopulated-field-fatal   # one target
+npm run sweep:failure-mode -- unpopulated-field-fatal   # one target
 npm run sweep:gate      # G1–G5: claims must cite records
 npm run sweep:report    # pass rates, skipped/inconclusive listed separately
 ```
@@ -49,15 +49,15 @@ real. Detection always runs through the plane tools.
 
 ## Phase-1 exit criteria (sweep plan §8)
 
-✓ `sweep:fm <target>` writes valid records; gate G1/G2 pass; teardown leaves
+✓ `sweep:failure-mode <target>` writes valid records; gate G1/G2 pass; teardown leaves
 the fixture healthy; the 5 hand-measured rows re-graduate via records.
 
 ## Answerability matrix (Family B2 — Phase 3, implemented)
 
-`npm run sweep:b2` runs each fixture through drupal-dev-mcp's
-`ask_a_drupal_expert` (ask mode by default; `SWEEP_B2_DEPTH=research` on
+`npm run sweep:answerability` runs each fixture through drupal-dev-mcp's
+`ask_a_drupal_expert` (ask mode by default; `SWEEP_ANSWERABILITY_DEPTH=research` on
 demand — research is ~4× slower on 8B models) for each model in
-`SWEEP_B2_MODELS` (default `llama31-8b-16k`), then scores the answer
+`SWEEP_ANSWERABILITY_MODELS` (default `llama31-8b-16k`), then scores the answer
 mechanically: shared pass/fail markers, deterministic claim-support
 (`check_claim_support` semantics), version-transposition flags, and
 grounding density (<0.5 flagged). Records carry the FULL answer text.

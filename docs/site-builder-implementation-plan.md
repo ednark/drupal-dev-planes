@@ -44,7 +44,7 @@ Deliverables:
 
 - `sweep/runner.mjs`, `sweep/gate.mjs`, `sweep/lib/{record,fixture,planes}.mjs`,
   `sweep/instruments/{failure-mode,corpus}.mjs`, `sweep/records/` (committed)
-- `npm run sweep:fm|sweep:corpus|sweep:gate|sweep:report`
+- `npm run sweep:failure-mode|sweep:corpus|sweep:gate|sweep:report`
 - Family A Phase-1 targets: `unpopulated-field-fatal`,
   `library-css-category-assertion`, `critical-error-page` (re-graduates the
   5 hand-measured rows mechanically)

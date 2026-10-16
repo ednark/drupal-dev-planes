@@ -283,8 +283,8 @@ async function main() {
         }
 
         // B2: answerability matrix, when models are configured (ask mode by
-        // default; research is 4x slower — set SWEEP_B2_DEPTH=research on demand).
-        const b2Models = (process.env.SWEEP_B2_MODELS ?? "").split(",").map((s) => s.trim()).filter(Boolean);
+        // default; research is 4x slower — set SWEEP_ANSWERABILITY_DEPTH=research on demand).
+        const b2Models = (process.env.SWEEP_ANSWERABILITY_MODELS ?? "").split(",").map((s) => s.trim()).filter(Boolean);
         if (b2Models.length > 0) {
           for (const model of b2Models) {
             const available = await ollamaReachable(process.env);
@@ -292,7 +292,7 @@ async function main() {
             if (!available || !(available.has(bare) || available.has(model))) {
               for (const { result } of results.values()) {
                 result.answerability.push({
-                  model, depth: process.env.SWEEP_B2_DEPTH ?? "ask",
+                  model, depth: process.env.SWEEP_ANSWERABILITY_DEPTH ?? "ask",
                   verdict: "skipped",
                   reason: `model-server-unavailable (${model})`,
                 });
@@ -308,7 +308,7 @@ async function main() {
                 try {
                   row = await askAndScore(expert, fixtureDef, model, process.env);
                 } catch (error) {
-                  row = { model, depth: process.env.SWEEP_B2_DEPTH ?? "ask", verdict: "error", reason: error.message.slice(0, 200) };
+                  row = { model, depth: process.env.SWEEP_ANSWERABILITY_DEPTH ?? "ask", verdict: "error", reason: error.message.slice(0, 200) };
                 }
                 result.answerability.push(row);
                 log(`b2 ${fixtureDef.id}: ${row.verdict}${row.markerScoring ? ` (markers pass=${row.markerScoring.passCount} fail=[${row.markerScoring.failHits}] claims=${row.claimSupport.verdict} density=${row.claimSupport.groundingDensity})` : row.reason ? ` — ${row.reason}` : ""}`);
@@ -318,7 +318,7 @@ async function main() {
             }
           }
         } else {
-          log("\nb2: SWEEP_B2_MODELS not set — answerability matrix skipped (run sweep:b2)");
+          log("\nb2: SWEEP_ANSWERABILITY_MODELS not set — answerability matrix skipped (run sweep:answerability)");
         }
 
         for (const { fixtureDef, startedAt, result } of results.values()) {
